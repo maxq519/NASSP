@@ -30,8 +30,6 @@
 
 // DS20060413 Include DirectInput
 #define DIRECTINPUT_VERSION 0x0800
-#include "dinput.h"
-#include "vesim.h"
 #include "dsky.h"
 #include "IMU.h"
 #include "cdu.h"
@@ -167,7 +165,7 @@ public:
 
 	void DrawSwitchVC(int id, int event, SURFHANDLE surf);
 	void SetDirection(const VECTOR3 &xvec, const VECTOR3 &yvec);
-	void DefineVCAnimations(UINT vc_idx);
+	void DefineVCAnimations(UINT vc_idx, bool left);
 	void DefineMeshGroup(UINT _grpX, UINT _grpY);
 
 	bool IsPowered();
@@ -184,7 +182,7 @@ protected:
 	UINT grpX, grpY;
 
 	VECTOR3 xvector, yvector;
-	MGROUP_TRANSLATE *xtrans, *ytrans;
+	MGROUP_ROTATE *xtrans, *ytrans;
 };
 
 #define CROSSPOINTER_LEFT_START_STRING "CROSSPOINTER_LEFT_START"
@@ -543,6 +541,12 @@ public:
 	void StartSeparationPyros();
 	void StopSeparationPyros();
 
+	//
+	// VISHANDLE
+	//
+
+	VISHANDLE vis;
+
 	h_Tank *DesO2Tank;
 	h_Tank *AscO2Tank1;
 	h_Tank *AscO2Tank2;
@@ -623,16 +627,10 @@ public:
 	// DS20060413 DirectInput stuff
 	// Handle to DLL instance
 	HINSTANCE dllhandle;
-	// pointer to DirectInput class itself
-	LPDIRECTINPUT8 dx8ppv;
 	// Joysticks-Enabled flag / counter - Zero if we aren't using DirectInput, nonzero is the number of joysticks we have.
 	int js_enabled;
 	// Pointers to DirectInput joystick devices
-	LPDIRECTINPUTDEVICE8 dx8_joystick[2]; // One for THC, one for RHC, ignore extras
-	DIDEVCAPS			 dx8_jscaps[2];   // Joystick capabilities
-	DIJOYSTATE2			 dx8_jstate[2];   // Joystick state
 	HRESULT				 dx8_failure;     // DX failure reason
-	Vesim vesim;                          ///< Vessel Specific Input Mngr
 	int rhc_id;							  // Joystick # for the RHC
 	int rhc_rot_id;						  // ID of ROTATOR axis to use for RHC Z-axis
 	int rhc_sld_id;                       // ID of SLIDER axis to use for throttle control from joystick configured as ACA
@@ -700,7 +698,7 @@ protected:
 	void DefineVCAnimations();
 	void DoFirstTimestep();
 	void LoadDefaultSounds();
-	void RCSSoundTimestep();
+	void EngineSoundTimestep();
 	// void GetDockStatus();
 	void JostleViewpoint(double amount);
 	void VCFreeCam(VECTOR3 dir, bool slow);
@@ -709,6 +707,13 @@ protected:
 	void SetContactLight(int m, bool state);
 	void SetPowerFailureLight(int m, bool state);
 	void SetStageSeqRelayLight(int m, bool state);
+
+#ifdef _OPENORBITER
+	void SetLMVCIntegralLight(UINT meshidx, DWORD *matList, MatProp EmissionMode, double state, int cnt);
+#else
+	void SetLMVCIntegralLight(UINT meshidx, DWORD *matList, int EmissionMode, double state, int cnt);
+#endif
+
 	void InitFDAI(UINT mesh);
 
 	// LM touchdown points
@@ -1568,8 +1573,6 @@ protected:
 #define VIEWANGLE 30
 
 	int	viewpos;
-	
-	bool SoundsLoaded;
 
 	bool Crewed;
 	bool AutoSlow;
@@ -1772,6 +1775,7 @@ protected:
 	FadeInOutSound GlycolPumpSound;
 	FadeInOutSound SuitFanSound;
 	Sound CrewDeadSound;
+	Sound EngineS;
 
 	//
 	// Connectors.

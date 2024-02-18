@@ -70,7 +70,6 @@
 
 #define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"
-#include "vesim.h"
 
 class IU;
 class SIBSystems;
@@ -909,7 +908,6 @@ public:
 	DIDEVCAPS			 dx8_jscaps[2];   ///< Joystick capabilities
 	DIJOYSTATE2			 dx8_jstate[2];   ///< Joystick state
 	HRESULT				 dx8_failure;     ///< DX failure reason
-	Vesim vesim;                          ///< Vessel Specific Input Mngr
 	int rhc_id;							  ///< Joystick # for the RHC
 	int rhc_rot_id;						  ///< ID of ROTATOR axis to use for RHC Z-axis
 	int rhc_sld_id;                       ///< ID of SLIDER axis to use for RHC Z-axis
@@ -926,7 +924,6 @@ public:
 	bool thc_auto;						  ///< THC Z-axis auto detection
 	bool rhc_thctoggle;					  ///< Enable RHC/THC toggle
 	int rhc_thctoggle_id;				  ///< RHC button id for RHC/THC toggle
-	bool enableVESIM;                     ///< Vessel Specific Input Mgmt enabled
 	bool rhc_thctoggle_pressed;			  ///< Button pressed flag				  
 	int js_current;
 
@@ -974,6 +971,8 @@ public:
 	bool clbkVCMouseEvent (int id, int event, VECTOR3 &p);
 	bool clbkVCRedrawEvent (int id, int event, SURFHANDLE surf);
 	void clbkPostCreation();
+	void clbkVisualCreated (VISHANDLE vis, int refcount);
+	void clbkVisualDestroyed (VISHANDLE vis, int refcount);
 
 	///
 	/// This function performs all actions required to update the spacecraft state as time
@@ -3935,6 +3934,7 @@ protected:
 	int seatsunfoldedidx;
 	int coascdridx;
 	int coascdrreticleidx;
+	DEVMESHHANDLE vcmesh;
 
 	bool ASTPMission;
 
@@ -4078,6 +4078,13 @@ protected:
 	double THRUST_VAC_PCM;
 
 	//
+	// VISHANDLE
+	//
+
+	VISHANDLE vis;
+
+
+	//
 	// Generic functions shared between SaturnV and Saturn1B
 	//
 
@@ -4151,6 +4158,15 @@ protected:
 	void InitFDAI(UINT mesh);
 
 	void VCFreeCam(VECTOR3 dir, bool slow);
+
+	//
+	// Integral Lights
+	//
+#ifdef _OPENORBITER
+	void SetCMVCIntegralLight(UINT meshidx, DWORD *matList, MatProp EmissionMode, double state, int cnt);
+#else
+	void SetCMVCIntegralLight(UINT meshidx, DWORD *matList, int EmissionMode, double state, int cnt);
+#endif
 
 	//
 	// Systems functions.
@@ -4230,7 +4246,7 @@ protected:
 	void DestroyStages(double simt);
 	void FireSeperationThrusters(THRUSTER_HANDLE *pth);
 	void LoadDefaultSounds();
-	void RCSSoundTimestep();
+	void EnginesSoundTimestep();
 	void LoadVC();
 	void UpdateVC(VECTOR3 meshdir);
 	void DefineCMAttachments();
@@ -4283,6 +4299,7 @@ protected:
 	Sound RCSSustainSound;
 	Sound HatchOpenSound;
 	Sound HatchCloseSound;
+	Sound EngineS;
 
 	///
 	/// Drogue deployment message.

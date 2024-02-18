@@ -228,9 +228,6 @@
     <ClCompile Include="..\..\src_saturn\IUControlSignalProcessor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src_aux\vesim.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src_aux\animations.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -461,9 +458,6 @@
     <ClInclude Include="..\..\src_aux\RF_calc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src_aux\vesim.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src_aux\animations.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -480,6 +474,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src_aux\nassputils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_csm\CM-VC-SeatsFolded_Resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_csm\CM-VC-SeatsUnfolded_Resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_csm\EmissionListCMVC.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
