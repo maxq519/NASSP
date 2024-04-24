@@ -1829,7 +1829,11 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 		SetCMVCIntegralLight(seatsunfoldedidx, CMVCSeatsUnFolded, MatProp::Light, (double)(FloodRotarySwitch.GetState()) / 10.0, NUM_ELEMENTS(CMVCSeatsUnFolded));
 		SetCMVCIntegralLight(seatsfoldedidx, CMVCSeatsFolded, MatProp::Light, (double)(FloodRotarySwitch.GetState()) / 10.0, NUM_ELEMENTS(CMVCSeatsFolded));
 		SetCMVCIntegralLight(coascdridx, CMVC_COAS_CDR, MatProp::Light, (double)(FloodRotarySwitch.GetState()) / 10.0, NUM_ELEMENTS(CMVC_COAS_CDR));
-
+		SetCMVCIntegralLight(windowshadesidx[0], CMVC_WINDOWSHADE, MatProp::Light, (double)(FloodRotarySwitch.GetState()) / 10.0, NUM_ELEMENTS(CMVC_WINDOWSHADE));
+		SetCMVCIntegralLight(windowshadesidx[1], CMVC_WINDOWSHADE, MatProp::Light, (double)(FloodRotarySwitch.GetState()) / 10.0, NUM_ELEMENTS(CMVC_WINDOWSHADE));
+		SetCMVCIntegralLight(windowshadesidx[2], CMVC_WINDOWSHADE, MatProp::Light, (double)(FloodRotarySwitch.GetState()) / 10.0, NUM_ELEMENTS(CMVC_WINDOWSHADE));
+		SetCMVCIntegralLight(windowshadesidx[3], CMVC_WINDOWSHADE, MatProp::Light, (double)(FloodRotarySwitch.GetState()) / 10.0, NUM_ELEMENTS(CMVC_WINDOWSHADE));
+		SetCMVCIntegralLight(windowshadesidx[4], CMVC_WINDOWSHADE, MatProp::Light, (double)(FloodRotarySwitch.GetState()) / 10.0, NUM_ELEMENTS(CMVC_WINDOWSHADE));
         return true;
 
 	case AID_VC_NUMERICS_LIGHT_P8:
@@ -1887,6 +1891,11 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 		SetCMVCIntegralLight(seatsunfoldedidx, CMVCSeatsUnFolded, MESHM_EMISSION, (double)(FloodRotarySwitch.GetState()) / 10.0, NUM_ELEMENTS(CMVCSeatsUnFolded));
 		SetCMVCIntegralLight(seatsfoldedidx, CMVCSeatsFolded, MESHM_EMISSION, (double)(FloodRotarySwitch.GetState()) / 10.0, NUM_ELEMENTS(CMVCSeatsFolded));
 		SetCMVCIntegralLight(coascdridx, CMVC_COAS_CDR, MESHM_EMISSION, (double)(FloodRotarySwitch.GetState()) / 10.0, NUM_ELEMENTS(CMVC_COAS_CDR));
+		SetCMVCIntegralLight(windowshadesidx[0], CMVC_WINDOWSHADE, MESHM_EMISSION, (double)(FloodRotarySwitch.GetState()) / 10.0, NUM_ELEMENTS(CMVC_WINDOWSHADE));
+		SetCMVCIntegralLight(windowshadesidx[1], CMVC_WINDOWSHADE, MESHM_EMISSION, (double)(FloodRotarySwitch.GetState()) / 10.0, NUM_ELEMENTS(CMVC_WINDOWSHADE));
+		SetCMVCIntegralLight(windowshadesidx[2], CMVC_WINDOWSHADE, MESHM_EMISSION, (double)(FloodRotarySwitch.GetState()) / 10.0, NUM_ELEMENTS(CMVC_WINDOWSHADE));
+		SetCMVCIntegralLight(windowshadesidx[3], CMVC_WINDOWSHADE, MESHM_EMISSION, (double)(FloodRotarySwitch.GetState()) / 10.0, NUM_ELEMENTS(CMVC_WINDOWSHADE));
+		SetCMVCIntegralLight(windowshadesidx[4], CMVC_WINDOWSHADE, MESHM_EMISSION, (double)(FloodRotarySwitch.GetState()) / 10.0, NUM_ELEMENTS(CMVC_WINDOWSHADE));
         return true;
 
 	case AID_VC_NUMERICS_LIGHT_P8:
