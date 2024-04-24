@@ -974,6 +974,8 @@ public:
 	bool clbkVCMouseEvent (int id, int event, VECTOR3 &p);
 	bool clbkVCRedrawEvent (int id, int event, SURFHANDLE surf);
 	void clbkPostCreation();
+	void clbkVisualCreated (VISHANDLE vis, int refcount);
+	void clbkVisualDestroyed (VISHANDLE vis, int refcount);
 
 	///
 	/// This function performs all actions required to update the spacecraft state as time
@@ -3293,7 +3295,7 @@ protected:
 	DSKYPushSwitch DskySwitchEight;
 	DSKYPushSwitch DskySwitchNine;
 	DSKYPushSwitch DskySwitchClear;
-	DSKYPushSwitch DskySwitchProg;
+	DSKYPushSwitch DskySwitchProceed;
 	DSKYPushSwitch DskySwitchKeyRel;
 	DSKYPushSwitch DskySwitchEnter;
 	DSKYPushSwitch DskySwitchReset;
@@ -3314,7 +3316,7 @@ protected:
 	DSKYPushSwitch Dsky2SwitchEight;
 	DSKYPushSwitch Dsky2SwitchNine;
 	DSKYPushSwitch Dsky2SwitchClear;
-	DSKYPushSwitch Dsky2SwitchProg;
+	DSKYPushSwitch Dsky2SwitchProceed;
 	DSKYPushSwitch Dsky2SwitchKeyRel;
 	DSKYPushSwitch Dsky2SwitchEnter;
 	DSKYPushSwitch Dsky2SwitchReset;
@@ -3939,8 +3941,7 @@ protected:
 	int windowshadesidx[5];
 	int coascdridx;
 	int coascdrreticleidx;
-
-	bool ASTPMission;
+	DEVMESHHANDLE vcmesh;
 
 	double DockAngle;
 
@@ -4082,6 +4083,13 @@ protected:
 	double THRUST_VAC_PCM;
 
 	//
+	// VISHANDLE
+	//
+
+	VISHANDLE vis;
+
+
+	//
 	// Generic functions shared between SaturnV and Saturn1B
 	//
 
@@ -4155,6 +4163,15 @@ protected:
 	void InitFDAI(UINT mesh);
 
 	void VCFreeCam(VECTOR3 dir, bool slow);
+
+	//
+	// Integral Lights
+	//
+#ifdef _OPENORBITER
+	void SetCMVCIntegralLight(UINT meshidx, DWORD *matList, MatProp EmissionMode, double state, int cnt);
+#else
+	void SetCMVCIntegralLight(UINT meshidx, DWORD *matList, int EmissionMode, double state, int cnt);
+#endif
 
 	//
 	// Systems functions.
