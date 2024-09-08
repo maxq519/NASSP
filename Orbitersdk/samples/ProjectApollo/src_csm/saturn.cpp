@@ -1508,6 +1508,25 @@ void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 
 
 	//By Jordan
+	// ANIMATED MESHES
+	if (panel382CoverState.Opening()) {
+		double dp = simdt * 1.5;
+		panel382CoverState.Move(dp);
+		SetAnimation(panel382CoverAnim, panel382CoverState.pos);
+		if (panel382CoverState.pos >= 1.0) {
+			panel382CoverState.action = AnimState::STOPPED;
+		}
+	};
+
+	if (panel382CoverState.Closing()) {
+		double dp = simdt * 1.5;
+		panel382CoverState.Move(dp);
+		SetAnimation(panel382CoverAnim, panel382CoverState.pos);
+		if (panel382CoverState.pos <= 0.0) {
+			panel382CoverState.action = AnimState::STOPPED;
+		}
+	};
+
 	if (wasteDisposalState.Opening()) {
 		double dp = simdt * 1.5;
 		wasteDisposalStateAll.action = AnimState::STOPPED;

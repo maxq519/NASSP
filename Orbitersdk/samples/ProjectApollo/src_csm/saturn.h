@@ -1220,7 +1220,7 @@ public:
 
 	/// Waste Disposal
 	void SetWasteDisposal();
-
+	void SetPanel382Cover();
 
 	///
 	/// \brief Set VC seats mesh
@@ -1567,6 +1567,13 @@ protected:
 	UINT wasteDisposalAnimAll;
 	AnimState wasteDisposalState;
 	AnimState wasteDisposalStateAll;
+
+/// Panel 382 Cover
+	int panel382CoverStatus = true;
+	double panel382CoverProc;
+	int meshidxpanel382Cover;
+	UINT panel382CoverAnim;
+	AnimState panel382CoverState;
 
 /// END TEST by JORDAN
 
