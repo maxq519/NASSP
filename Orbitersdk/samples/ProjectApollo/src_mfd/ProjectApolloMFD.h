@@ -32,6 +32,10 @@ class LEM;
 class Crawler;
 class MCC;
 
+#ifndef OAPI_MSGTYPE
+typedef int OAPI_MSGTYPE;
+#endif
+
 ///
 /// \ingroup MFD
 ///
@@ -115,7 +119,7 @@ public:
 	void ReadStatus (FILEHANDLE scn);
 	void StoreStatus (void) const;
 	void RecallStatus (void);
-	static int MsgProc (UINT msg, UINT mfd, WPARAM wparam, LPARAM lparam);
+	static OAPI_MSGTYPE MsgProc (UINT msg, UINT mfd, WPARAM wparam, LPARAM lparam);
 
 protected:
 
