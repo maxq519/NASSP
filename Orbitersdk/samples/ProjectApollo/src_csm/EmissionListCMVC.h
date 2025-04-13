@@ -665,8 +665,7 @@ DWORD CMVCSeatsUnFolded[] = {
 	VC_MAT_CM_VC_SeatsUnfolded_MTL_7,
 	VC_MAT_CM_VC_SeatsUnfolded_SeatWeave_with_Tex,
 	VC_MAT_CM_VC_SeatsUnfolded_StdIntr_with_Tex,
-	VC_MAT_CM_VC_SeatsUnfolded_StdIntr2,
-	8,9
+	VC_MAT_CM_VC_SeatsUnfolded_StdIntr2
 };
 
 // SeatsFolded.msh
