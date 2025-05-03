@@ -992,9 +992,9 @@ void Saturn::SetCSMStage (VECTOR3 cg_ofs)
 	th_sps[0] = CreateThruster(_V(0.0, 0.0, -3.37472), _V(0, 0, 1), SPS_THRUST, ph_sps, SPS_ISP);
 	thg_sps = CreateThrusterGroup(th_sps, 1, THGROUP_USER);
 
-	VECTOR3 spspos0 = _V(0.0, 0.0, -5);
+	VECTOR3 spspos0 = _V(0.0, 0.0, -3.75);
 	EXHAUSTSPEC es_sps[1] = {
-		{ th_sps[0], NULL, &spspos0, NULL, 20.0, 2.25, 0, 0.1, SMExhaustTex, EXHAUST_CONSTANTPOS }
+		{ th_sps[0], NULL, &spspos0, NULL, 8, 0.75, 0, 0.1, SMExhaustTex, EXHAUST_CONSTANTPOS }
 	};
 
 	AddExhaust(es_sps);

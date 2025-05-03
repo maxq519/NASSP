@@ -330,9 +330,9 @@ static inline void CSMToOrbiterCoordinates(VECTOR3 &vec)
 // Engine information.
 //
 
-#define SPS_THRUST					91188.544		// CMC fixed constant
-#define SPS_ISP						 3080.0
-#define SPS_DEFAULT_PROPELLANT		18500.0		// Apollo 11 Mission Report
+#define SPS_THRUST					55000.000		// CMC fixed constant
+#define SPS_ISP						 3608.8
+#define SPS_DEFAULT_PROPELLANT		19550.0		// LF2 + N2O4
 #define SPS_NORM_OXIDIZER_FLOW		(1.6 / (1.0 + 1.6))
 #define SPS_PITCH_OFFSET            -2.15		// in deg
 #define SPS_YAW_OFFSET               0.95		// in deg
