@@ -896,6 +896,10 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 		// Do DSKY stuff
 		DSKYPushSwitch* dskyKeyChanged = nullptr;
 		switch (key) {
+			case OAPI_KEY_K:
+				//kill rotation
+				SetAngularVel(_V(0, 0, 0));
+				break;
 			case OAPI_KEY_DECIMAL:
 				dskyKeyChanged = &DskySwitchClear;
 				break;
@@ -1029,6 +1033,9 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 				// Orbiter undocking messes with our undocking system. We consume the keybind here to block it.
 				// This won't work if the user has changed this keybind. Unfortunately Orbiter does not export the keymap through the API (yet). :(
 				return 1;
+			case OAPI_KEY_S:
+				QuicksaveScenario();
+				break;
 		}
 
 		// Direction-specific code, handle DEDA key presses if any.
@@ -1047,17 +1054,6 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 			}
 		}
 		return 0;
-	}
-
-	if (!KEYMOD_SHIFT(keystate) && KEYMOD_CONTROL(keystate) && KEYMOD_ALT(keystate))
-	{
-		if (down) {
-			switch (key) {
-			case OAPI_KEY_S:
-				QuicksaveScenario();
-				break;
-			}
-		}
 	}
 
 	if (down){
