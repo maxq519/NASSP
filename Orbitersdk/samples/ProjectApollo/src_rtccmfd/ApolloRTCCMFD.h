@@ -94,6 +94,7 @@ public:
 	void Text(oapi::Sketchpad *skp, int x, int y, char *format, int val);
 	void Text_GET_MMSS(oapi::Sketchpad *skp, int x, int y, double val);
 	void Text_GET_MMSSC(oapi::Sketchpad *skp, int x, int y, double val);
+	void Text_GET_HHMM(oapi::Sketchpad *skp, int x, int y, double val);
 	void Text_GET_HHHMM(oapi::Sketchpad *skp, int x, int y, double val);
 	void Text_GET_HHMMSS(oapi::Sketchpad *skp, int x, int y, double val);
 	void Text_GET_HHHMMSS(oapi::Sketchpad *skp, int x, int y, double val);
@@ -401,7 +402,6 @@ public:
 	void menuSetLDPPSequence();
 	void menuTLANDUplinkCalc();
 	void menuTLANDUpload();
-	void set_t_TPI(double time);
 	void menuSetDescPlanInitPage();
 	void menuCycleLLWPChaserOption();
 	void menuSetLiftoffguess();
@@ -488,10 +488,10 @@ public:
 	void menuAscentPADCalc();
 	void menuCycleAscentPADVersion();
 	void menuSetPDAPPage();
+	void menuSetPDAPInputs();
+	bool set_PDAPInputs(int sel, char *str);
 	void menuPDAPCalc();
-	void menuCyclePDAPSegments();
-	void menuCyclePDAPEngine();
-	void menuAP11AbortCoefUplink();
+	void menuPDAPUplink();
 	void menuSetFIDOOrbitDigitalsCSMPage();
 	void menuSetFIDOOrbitDigitalsLMPage();
 	void menuSetFIDOOrbitDigitalsGETL();
@@ -778,6 +778,8 @@ public:
 	void menuSLVNavigationUpdateUplink();
 	void menuVectorPanelSummaryPage();
 	void menuGetOnboardStateVectors();
+	void menuSetGroundtrackDigitalsPage();
+	void menuSetRecoveryAscendingNodeDisplayPage();
 	void menuSetRetrofireConstraintsPage();
 	void menuSetRetrofireDigitalsPage();
 	void menuRetrofireGETIDialogue();
@@ -800,6 +802,11 @@ public:
 	void menuChooseRetrofireGs();
 	bool set_RetrofireGs(double val);
 	void menuChooseRetrofireUllage();
+	void menuCycleGroundTrackDigitalsPages();
+	void menuSetGroundtrackDigitalsInput();
+	void menuGroundtrackDigitalsCalc();
+	void menuSetRecoveryAscendingNodeDisplayInput();
+	void menuRecoveryAscendingNodeDisplayCalc();
 	void menuSetRetrofireTargetSelectionPage();
 	void menuCycleRecoveryTargetSelectionPages();
 	void menuRecoveryTargetSelectionCalc();

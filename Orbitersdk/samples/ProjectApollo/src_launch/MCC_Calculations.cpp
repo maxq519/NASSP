@@ -22,7 +22,16 @@
   **************************************************************************/
 
 #include "MCC_Calculations.h"
+#include "nassputils.h"
+#include "soundlib.h"
+#include "apolloguidance.h"
+#include "saturn.h"
+#include "iu.h"
+#include "sivb.h"
+#include "LVDC.h"
 #include "rtcc.h"
+
+using namespace nassp;
 
 MCC_Calculations::MCC_Calculations(RTCC *r) : RTCCModule(r)
 {
@@ -130,6 +139,14 @@ bool MCC_Calculations::GETEval(double get)
 	return false;
 }
 
+double MCC_Calculations::FindOrbitalSunrise(VehicleDataBlock sv, double t_sunrise_guess)
+{
+	//Temporary conversion function
+	SV sv2;
+	sv2 = pRTCC->ConvertEphemDatatoSV(sv.sv, sv.Weight);
+	return FindOrbitalSunrise(sv2, t_sunrise_guess);
+}
+
 double MCC_Calculations::FindOrbitalSunrise(SV sv, double t_sunrise_guess)
 {
 	SV sv1;
@@ -144,6 +161,30 @@ double MCC_Calculations::FindOrbitalSunrise(SV sv, double t_sunrise_guess)
 
 	ttoSunrise = OrbMech::sunrise(pRTCC->SystemParameters.MAT_J2000_BRCS, sv1.R, sv1.V, sv1.MJD, sv1.gravref, hSun, true, false, false);
 	return t_sunrise_guess + ttoSunrise;
+}
+
+double MCC_Calculations::FindOrbitalSunset(VehicleDataBlock sv, double t_sunset_guess)
+{
+	//Temporary conversion function
+	SV sv2;
+	sv2 = pRTCC->ConvertEphemDatatoSV(sv.sv, sv.Weight);
+	return FindOrbitalSunset(sv2, t_sunset_guess);
+}
+
+double MCC_Calculations::FindOrbitalSunset(SV sv, double t_sunset_guess)
+{
+	SV sv1;
+	double GET_SV, dt, ttoSunset;
+
+	OBJHANDLE hSun = oapiGetObjectByName("Sun");
+
+	GET_SV = OrbMech::GETfromMJD(sv.MJD, pRTCC->CalcGETBase());
+	dt = t_sunset_guess - GET_SV;
+
+	sv1 = pRTCC->coast(sv, dt);
+
+	ttoSunset = OrbMech::sunrise(pRTCC->SystemParameters.MAT_J2000_BRCS, sv1.R, sv1.V, sv1.MJD, sv1.gravref, hSun, false, false, false);
+	return t_sunset_guess + ttoSunset;
 }
 
 double MCC_Calculations::FindOrbitalMidnight(SV sv, double t_TPI_guess)
@@ -211,6 +252,47 @@ void MCC_Calculations::PrelaunchMissionInitialization()
 	//P80 MED: mission initialization
 	sprintf_s(Buff, "P80,1,CSM,%d,%d,%d;", pRTCC->GZGENCSN.MonthofLiftoff, pRTCC->GZGENCSN.DayofLiftoff, pRTCC->GZGENCSN.Year);
 	pRTCC->GMGMED(Buff);
+}
+
+double MCC_Calculations::GetLVDCOrbitalInsertionTime(VESSEL *v)
+{
+	if (utils::IsVessel(v, utils::SaturnIB) || utils::IsVessel(v, utils::SaturnIB_SIVB))
+	{
+		//Saturn IB LVDC
+		LVDC1B *lvdc;
+
+		if (utils::IsVessel(v, utils::SaturnIB))
+		{
+			Saturn *sat = (Saturn*)v;
+			lvdc = (LVDC1B*)sat->GetIU()->GetLVDC();
+		}
+		else
+		{
+			SIVB *sivb = (SIVB*)v;
+			lvdc = (LVDC1B*)sivb->GetIU()->GetLVDC();
+		}
+
+		return (lvdc->T_CO - 17.0); //TBD: Time when TB4 was established would be better, but it is not being saved yet
+	}
+	else if (utils::IsVessel(v, utils::SaturnV) || utils::IsVessel(v, utils::SaturnV_SIVB))
+	{
+		//Saturn V LVDC
+		LVDCSV *lvdc;
+
+		if (utils::IsVessel(v, utils::SaturnV))
+		{
+			Saturn *sat = (Saturn*)v;
+			lvdc = (LVDCSV*)sat->GetIU()->GetLVDC();
+		}
+		else
+		{
+			SIVB *sivb = (SIVB*)v;
+			lvdc = (LVDCSV*)sivb->GetIU()->GetLVDC();
+		}
+
+		return (lvdc->TB5 - 17.0);
+	}
+	else return 0.0;
 }
 
 void MCC_Calculations::DMissionRendezvousPlan(SV sv_A0, double &t_TPI0)
@@ -401,4 +483,30 @@ void MCC_Calculations::FMissionRendezvousPlan(VESSEL *chaser, VESSEL *target, SV
 	sprintf(Buffer, "TIG %s", Buffer2);
 	oapiWriteLog(Buffer);
 	*/
+}
+
+void MCC_Calculations::StoreStateVector(VehicleDataBlock sv)
+{
+	pRTCC->calcParams.SVSTORE1 = pRTCC->ConvertEphemDatatoSV(sv.sv, sv.Weight);
+}
+
+void MCC_Calculations::StoreStateVector(SV sv)
+{
+	pRTCC->calcParams.SVSTORE1 = sv;
+}
+
+void MCC_Calculations::StoreStateVector(EphemerisData sv, double Weight)
+{
+	pRTCC->calcParams.SVSTORE1 = pRTCC->ConvertEphemDatatoSV(sv, Weight);
+}
+
+void MCC_Calculations::RestoreStateVector(VehicleDataBlock &sv)
+{
+	sv.sv = pRTCC->ConvertSVtoEphemData(pRTCC->calcParams.SVSTORE1);
+	sv.Weight = pRTCC->calcParams.SVSTORE1.mass;
+}
+
+void MCC_Calculations::RestoreStateVector(SV &sv)
+{
+	sv = pRTCC->calcParams.SVSTORE1;
 }
