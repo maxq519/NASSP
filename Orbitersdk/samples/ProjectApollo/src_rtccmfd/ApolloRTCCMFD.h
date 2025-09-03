@@ -39,22 +39,6 @@ struct RTCCMFDInputBoxData
 	void (ApolloRTCCMFD::*func)(void) = NULL;
 };
 
-struct MEDInput
-{
-	std::string Label;			//Short description on MFD page
-	std::string Description;	//Detailed description in MFD input box
-	std::string Unit;			//Unit displayed on MFD page
-	std::string Data;
-};
-
-struct MEDInputPage
-{
-	std::string Title;			//Title displayed on MFD page
-	std::string MEDCode;
-	std::vector<MEDInput> table;
-	int display = -1;
-};
-
 struct RTCCMFDData
 {
 	int screen = 0;
@@ -65,7 +49,7 @@ struct RTCCMFDData
 	int marker = 0;
 	int markermax = 0;
 	UINT ID = 0;
-	std::string MEDCode;
+	unsigned int ActiveMEDInputPage = 0;
 	bool IsCSM = false;
 	bool EnableCalculation;
 };
@@ -137,7 +121,6 @@ public:
 	void set_IUVessel();
 	void set_TargetVessel();
 	void CycleThroughVessels(VESSEL **v) const;
-	void menuSLVLaunchTargetingPad();
 	void menuSLVLaunchTargeting();
 	void menuSLVInsertionSVtoMPT();
 	void menuSLVLaunchUplink();
@@ -240,6 +223,8 @@ public:
 	void menuGeneralMEDRequest();
 	void menuGeneralMEDRequest(char *message);
 	void GeneralMEDRequest(char *str);
+	void menuMEDInputFromFile();
+	void ProcessMEDInputFromFile(char *str);
 	void EntryRangeDialogue();
 	void set_SVPageTarget();
 	void menuSVCalc();
@@ -541,38 +526,16 @@ public:
 	void menuREFSMMATUplinkCalc();
 	bool REFSMMATUplinkCalc(char *str);
 	void menuSetTITransferPage();
-	void menuCycleTITable();
-	void menuSetTIPlanNumber();
-	void set_TIPlanNumber(int plan);
-	void menuTIDeleteGET();
-	void set_TIDeleteGET(double get);
 	void menuChooseTIThruster();
 	bool set_ChooseTIThruster(std::string th);
-	void menuCycleTIAttitude();
-	void menuTIUllageOption();
-	void menuM70UllageOption();
-	void menuCycleTIIterationFlag();
-	void menuCycleTITimeFlag();
-	void menuTIDPSTenPercentTime();
-	void set_TIDPSTenPercentTime(double deltat);
-	void menuTIDPSScaleFactor();
-	void set_TIDPSScaleFactor(double scale);
 	void menuTransferTIToMPT();
 	void menuSetSPQorDKIRTransferPage();
 	void menuTransferSPQorDKIToMPT();
 	void menuBackToSPQorDKIPage();
 	void menuChooseSPQDKIThruster();
 	bool set_ChooseSPQDKIThruster(std::string th);
-	void menuM70SelectPlan();
-	void menuM70DeleteGET();
-	void set_MPTM70DeleteGET(double get);
-	void menuM70CycleAttitude();
-	void menuM70CycleIterationFlag();
-	void menuM70CycleTimeFlag();
-	void menuM70DPSTenPercentTime();
-	void set_M70DPSTenPercentTime(double deltat);
-	void menuM70DPSScaleFactor();
-	void set_M70DPSScaleFactor(double scale);
+	void menuSetM70Inputs();
+	void menuSetM72Inputs();
 	void menuSetGPMTransferPage();
 	void menuTransferGPMToMPT();
 	void menuCycleGPMTable();
@@ -953,7 +916,7 @@ private:
 	bool IsCSM; //Chooses if the CSM or LM vessel in the RTCC is selected
 	bool EnableCalculation; //Generic variable for switch on/off a display related calculation
 	int ErrorMessage;
-	MEDInputPage MEDInputData;
+	unsigned int ActiveMEDInputPage;
 
 	//Additional display functions
 	void AGOPDisplay(oapi::Sketchpad*skp);
