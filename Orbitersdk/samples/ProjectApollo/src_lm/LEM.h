@@ -551,7 +551,6 @@ public:
 	void StartSeparationPyros();
 	void StopSeparationPyros();
 
-	void AnimEVAAntHandle();
 	void SetAnimations(double);
 
 	//
@@ -1542,7 +1541,7 @@ protected:
     PushSwitch       CO2CanisterPrimVent;
 	RotationalSwitch CO2CanisterSecValve;
     PushSwitch       CO2CanisterSecVent;
-	CircuitBrakerSwitch WaterSepSelectSwitch;
+	ToggledPushSwitch WaterSepSelectSwitch;
 
 	/////////////////////
 	// LEM Upper Hatch //
@@ -1582,7 +1581,7 @@ protected:
     // LEM EVA Antenna //
 	/////////////////////
  
-	CircuitBrakerSwitch EvaAntennaHandle;
+	LEMEvaAntennaHandle EvaAntennaHandle;
 
 	///////////////////////////
 	// ORDEAL Panel switches //
@@ -1793,14 +1792,6 @@ protected:
 	double vcFreeCamz;
 	double vcFreeCamSpeed;
 	double vcFreeCamMaxOffset;
-
-	//
-	// EVA Antenna Handle
-	//
-
-	int EVAAntHandleStatus;
-	UINT EVAAntHandleAnim;
-	AnimState EVAAntHandleState;
 
 	//
 	// Failures.
