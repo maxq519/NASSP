@@ -32,7 +32,7 @@ TLTrajectoryComputers::TLTrajectoryComputers(RTCC *r) : RTCCModule(r)
 	mu_E = OrbMech::mu_Earth;
 	mu_M = OrbMech::mu_Moon;
 
-	isp_SPS = 3080.0;
+	isp_SPS = 3608.8;
 	isp_DPS = 3107.0;
 
 	F_I_SIVB = 179847.1544797684; //LBF, 800000.0 Newton

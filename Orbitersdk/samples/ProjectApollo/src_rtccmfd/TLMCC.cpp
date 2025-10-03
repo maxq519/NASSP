@@ -122,7 +122,7 @@ void TLMCCProcessor::Main(TLMCCOutputData &out)
 	if (!MEDQuantities.Config || MEDQuantities.useSPS)
 	{
 		isp_MCC = isp_SPS;
-		Wdot = 29.60667013;
+		Wdot = 15.24133405;
 	}
 	else
 	{
