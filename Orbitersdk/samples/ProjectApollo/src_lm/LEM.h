@@ -129,8 +129,8 @@ public:
 	void SetLGCAltitudeRate(int val);
 	void AGSAltitudeAltitudeRate(int Data);
 
-	double GetLGCAltitude() { return lgc_alt; };
-	double GetLGCAltitudeRate() { return lgc_altrate; };
+	double GetTapeAltitude() { return reqRange * 3.2808399; };
+	double GetTapeAltitudeRate() { return reqRate * 3.2808399; };
 
 	bool PowerSignalMonOn();
 	bool PowerFailure();
@@ -168,6 +168,8 @@ public:
 	void Timestep(double simdt);
 	void SystemTimestep(double simdt);
 	void GetVelocities(double &vx, double &vy);
+	double GetFwdVel() { return callout_x * 10.0; };
+	double GetLatVel() { return callout_y * 10.0; };
 	void UpdateDisplayValues(double simdt);
 	void MeterMovement(double simdt, double &val, double &dis_val);
 
@@ -186,6 +188,7 @@ protected:
 	double vel_x, vel_y;
 	double display_vel_x, display_vel_y;
 	double lgc_forward, lgc_lateral;
+	double callout_x, callout_y;
 
 	UINT anim_xpointerx, anim_xpointery;
 	UINT grpX, grpY;
