@@ -736,7 +736,7 @@ void Saturn::AddSM(double offset, bool showSPS)
 		simbay.DefineAnimations(simbay2idx);
 	}
 	
-	if (!SubSatLaunched)
+	if (pMission->GetPanel230Version() == 1 && !SubSatLaunched)
 	{
 		subsatellitestoredidx = AddMesh(hSUBSATELLITESTORED, &mesh_dir);
 	}

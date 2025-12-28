@@ -1591,13 +1591,6 @@ void Saturn::SetAnimations(double simdt)
 	if (ORDEALSlewSwitch.IsDown())			SetAnimation(ordealDummyMeshAnim[5], 0.0);
 
 	SetAnimation(ordealDummyMeshAnim[6], ORDEALAltSetRotary.GetOutput());
-	
-	//HF Dipole Antennas animations update (Only CSM 114)
-	hf_antenna_1.TimeStep(simt, simdt);
-	hf_antenna_2.TimeStep(simt, simdt);
-	
-	//SIMBay animations (only J Missions, Apollo 15+
-	simbay.TimeStep(simt, simdt);
 
 	DoMeshAnimation(panel382CoverState, panel382CoverAnim, 0.5, simdt);
 	DoMeshAnimation(altimeterCoverState, altimeterCoverAnim, 2.0, simdt);
@@ -1621,6 +1614,14 @@ void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 	TRACE(buffer);
 
 	SetAnimations(simdt);
+
+	//HF Dipole Antennas animations update (Only CSM 114)
+	hf_antenna_1.TimeStep(simt, simdt);
+	hf_antenna_2.TimeStep(simt, simdt);
+
+	//SIMBay animations (only J Missions, Apollo 15+
+	simbay.TimeStep(simt, simdt);
+
 //	UpdatePointingArrow();
 //	InitFDAICustomCamera();
 
