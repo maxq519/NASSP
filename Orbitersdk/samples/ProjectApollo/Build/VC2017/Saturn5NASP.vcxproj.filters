@@ -258,6 +258,9 @@
     <ClCompile Include="..\..\src_csm\eps.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+	  <ClCompile Include="..\..\src_csm\SIMBay.cpp">
+	  <Filter>Source Files</Filter>
+	</ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src_sys\apolloguidance.h">
@@ -514,6 +517,9 @@
     <ClInclude Include="..\..\src_csm\eps.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+	  <ClInclude Include="..\..\src_csm\SIMBay.h">
+	  <Filter>Header Files</Filter>
+	</ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\Abort.bmp">

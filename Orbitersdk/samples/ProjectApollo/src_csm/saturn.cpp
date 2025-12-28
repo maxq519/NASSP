@@ -670,6 +670,21 @@ void Saturn::initSaturn()
 	ChutesAttached = true;
 	CSMAttached = true;
 	SIMBayPanelJett = false;
+	SubSatLaunched = false;
+	SubSatRetracted = false;
+	DipoleAntennasJett = false;
+    GammaBayDeployed = false;
+	MassSpectrometerDeployed = false;
+	GammaBayJett = false;
+	MassSpectrometerJett = false;
+	DipoleAntenna1Deployed = false;
+	DipoleAntenna2Deployed = false;
+	MappingCameraCoverDeployed = false;
+	XRayCoverDeployed = false;
+	IRCoverDeployed = false;
+	UVCoverDeployed = false;
+	PanoramicCameraON = false;
+	MappingCameraExtended = false;
 
 	TLISoundsLoaded = false;
 	IUSCContPermanentEnabled = true;
@@ -751,6 +766,7 @@ void Saturn::initSaturn()
 	hLC34 = 0;
 	hLC37 = 0;
 	hLCC = 0;
+	hSubSatellite = 0;
 
 	//
 	// Apollo 13 flags.
@@ -789,6 +805,10 @@ void Saturn::initSaturn()
 	imu.SetVessel(this, false);
 	dsky.Init(&LightingNumIntLMDCCB, &CMCDCBusFeeder, &NumericRotarySwitch, &IntegralRotarySwitch, NULL, NULL);
 	dsky2.Init(&LightingNumIntLEBCB, &CMCDCBusFeeder, &Panel100NumericRotarySwitch, &Panel100IntegralRotarySwitch, NULL, NULL);
+	
+	//SIMBay Initialization (Only J Missions, Apollo 15+)
+	simbay.Init(this);
+
 
 	//
 	// Configure SECS.
@@ -1154,6 +1174,8 @@ void Saturn::initSaturn()
 	coascdrreticleidx = -1;
 	cmvccuecardsarrowsidx = -1;
 	hcmPointingArrowidx = -1;
+	dipoleantenna1idx = -1;
+	dipoleantenna2idx = -1;
 
 	vcmesh = NULL;
 	vis = NULL;
@@ -1187,6 +1209,8 @@ void Saturn::initSaturn()
 	sivb = NULL;
 
 	Panel181 = NULL;
+	Panel230CSM112 = NULL;
+	Panel230CSM114 = NULL;
     Panel277 = NULL;
 	Panel278J = NULL;
 
@@ -1567,6 +1591,13 @@ void Saturn::SetAnimations(double simdt)
 	if (ORDEALSlewSwitch.IsDown())			SetAnimation(ordealDummyMeshAnim[5], 0.0);
 
 	SetAnimation(ordealDummyMeshAnim[6], ORDEALAltSetRotary.GetOutput());
+	
+	//HF Dipole Antennas animations update (Only CSM 114)
+	hf_antenna_1.TimeStep(simt, simdt);
+	hf_antenna_2.TimeStep(simt, simdt);
+	
+	//SIMBay animations (only J Missions, Apollo 15+
+	simbay.TimeStep(simt, simdt);
 
 	DoMeshAnimation(panel382CoverState, panel382CoverAnim, 0.5, simdt);
 	DoMeshAnimation(altimeterCoverState, altimeterCoverAnim, 2.0, simdt);
@@ -2013,6 +2044,13 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 
 	checkControl.save(scn);
 	eventControl.save(scn);
+	
+	//save state of sim bay instruments
+	if (pMission->GetPanel230Version() == 2) hf_antenna_1.SaveState(scn);
+	if (pMission->GetPanel230Version() == 2) hf_antenna_2.SaveState(scn);
+	if (pMission->IsJMission()) simbay.MappingCameraSaveState(scn);
+	if (pMission->GetPanel230Version() == 1) simbay.GammaBaySaveState(scn);
+	if (pMission->GetPanel230Version() == 1) simbay.MassSpectrometerSaveState(scn);
 }
 
 void Saturn::QuicksaveScenario()
@@ -2188,6 +2226,21 @@ int Saturn::GetAttachState()
 	state.ChutesAttached = ChutesAttached;
 	state.LESLegsCut = LESLegsCut;
 	state.SIMBayPanelJett = SIMBayPanelJett;
+	state.SubSatLaunched = SubSatLaunched;
+	state.SubSatRetracted = SubSatRetracted;
+	state.GammaBayDeployed = GammaBayDeployed;
+	state.MassSpectrometerDeployed = MassSpectrometerDeployed;
+	state.GammaBayJett = GammaBayJett;
+	state.MassSpectrometerJett = MassSpectrometerJett;
+	state.DipoleAntennasJett = DipoleAntennasJett;
+	state.DipoleAntenna1Deployed = DipoleAntenna1Deployed;
+	state.DipoleAntenna2Deployed = DipoleAntenna2Deployed;
+	state.MappingCameraCoverDeployed = MappingCameraCoverDeployed;
+	state.XRayCoverDeployed = XRayCoverDeployed;
+	state.IRCoverDeployed = IRCoverDeployed;
+	state.UVCoverDeployed = UVCoverDeployed;
+	state.PanoramicCameraON = PanoramicCameraON;
+	state.MappingCameraExtended = MappingCameraExtended;
 
 	return state.word;
 }
@@ -2207,6 +2260,21 @@ void Saturn::SetAttachState(int s)
 	ChutesAttached = (state.ChutesAttached != 0);
 	LESLegsCut = (state.LESLegsCut != 0);
 	SIMBayPanelJett = (state.SIMBayPanelJett != 0);
+	SubSatLaunched = (state.SubSatLaunched != 0);
+	SubSatRetracted = (state.SubSatRetracted != 0);
+	GammaBayDeployed = (state.GammaBayDeployed != 0);
+	MassSpectrometerDeployed = (state.MassSpectrometerDeployed != 0);
+	GammaBayJett = (state.GammaBayJett != 0);
+	MassSpectrometerJett = (state.MassSpectrometerJett != 0);
+	DipoleAntennasJett = (state.DipoleAntennasJett != 0);
+	DipoleAntenna1Deployed = (state.DipoleAntenna1Deployed != 0);
+	DipoleAntenna2Deployed = (state.DipoleAntenna2Deployed != 0);
+	MappingCameraCoverDeployed = (state.MappingCameraCoverDeployed != 0);
+	XRayCoverDeployed = (state.XRayCoverDeployed != 0);
+	IRCoverDeployed = (state.IRCoverDeployed != 0);
+	UVCoverDeployed = (state.UVCoverDeployed != 0);
+	PanoramicCameraON = (state.PanoramicCameraON != 0);
+	MappingCameraExtended = (state.MappingCameraExtended != 0);
 }
 
 int Saturn::GetA13State()
@@ -2792,6 +2860,21 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		else if (!strnicmp(line, "VHFRANGING", 10)) {
 			vhfranging.LoadState(line);
 		}
+		else if (!strnicmp(line, "HFANTENNA1", 10)) {
+			hf_antenna_1.LoadState(line);
+			}
+		else if (!strnicmp(line, "HFANTENNA2", 10)) {
+			hf_antenna_2.LoadState(line);
+			}
+		else if (!strnicmp(line, "MAPPINGCAMERA", 13)) {
+			simbay.MappingCameraLoadState(line);
+			}
+		else if (!strnicmp(line, "GAMMABAY", 8)) {
+			simbay.GammaBayLoadState(line);
+			}
+		else if (!strnicmp(line, "MASSSPEC", 8)) {
+			simbay.MassSpectrometerLoadState(line);
+			}
 	    else if (!strnicmp (line, "DATARECORDER", 12)) {
 		    dataRecorder.LoadState(line);
 	    }

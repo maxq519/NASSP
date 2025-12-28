@@ -1408,6 +1408,7 @@ void SaturnV::SeparateStage (int new_stage)
 		SMConfig.SMBusBPowered = MainBusBController.IsSMBusPowered();
 		if (secs.SMJCA) secs.SMJCA->GetState(SMConfig.SMJCAState);
 		if (secs.SMJCB) secs.SMJCB->GetState(SMConfig.SMJCBState);
+		SMConfig.SIMBayVersion = pMission->GetPanel230Version();
 
 		SM *SMVessel = (SM *) oapiGetVesselInterface(hSMJet);
 		SMVessel->SetState(SMConfig);
