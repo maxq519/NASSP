@@ -44,6 +44,7 @@
 #include "tracer.h"
 #include "papi.h"
 #include "Mission.h"
+#include "Autosave.h"
 
 #include "connector.h"
 #include "nassputils.h"
@@ -856,9 +857,9 @@ int LEM::clbkConsumeDirectKey(char* kstate)
 	// Only override these keys if the user is holding no modifier keys, Alt only, or Ctrl + Alt.
 	if (GetAttitudeMode() == ATTITUDEMODE::ATTMODE_ROT && !(KEYMOD_CONTROL(kstate) && !KEYMOD_ALT(kstate)) && !KEYMOD_SHIFT(kstate)) {
 		// Possible deflection amounts are:
-		// No key modifiers: 11.5° (max proportional rate, but not hardover)
-		// Alt: 13° (full deflection, triggering hardover switches)
-		// Ctrl + Alt: 0.75° (triggering out-of-detent switches, but not commanding thrust)
+		// No key modifiers: 11.5ï¿½ (max proportional rate, but not hardover)
+		// Alt: 13ï¿½ (full deflection, triggering hardover switches)
+		// Ctrl + Alt: 0.75ï¿½ (triggering out-of-detent switches, but not commanding thrust)
 		double deflectionDegrees = KEYMOD_ALT(kstate) ? KEYMOD_CONTROL(kstate) ? 0.75 : 13.0 : 11.5;
 		double deflectionPercent = deflectionDegrees / 13.0;
 
@@ -1117,7 +1118,7 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 				break;
 
 			case OAPI_KEY_W:
-				if (optics.ZeroDetent == true)
+				if (AOTReticleDetent.GetState() == 1)
 				{
 					sprintf(oapiDebugString(), "AOT DETENT ENABLED");
 					DebugLineClearTimer = 5;
@@ -1133,7 +1134,7 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 				break;
 
 			case OAPI_KEY_S:
-				if (optics.ZeroDetent == true)
+				if (AOTReticleDetent.GetState() == 1)
 				{
 					sprintf(oapiDebugString(), "AOT DETENT ENABLED");
 					DebugLineClearTimer = 5;
@@ -1152,7 +1153,7 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 
 				if (KEYMOD_ALT(keystate)) {
 					optics.AOTDetentToggle(); // Toggle AOT detent
-					if (optics.ZeroDetent == true)
+					if (AOTReticleDetent.GetState() == 1)
 					{
 						sprintf(oapiDebugString(), "AOT DETENT ENABLED");
 					}
@@ -1513,6 +1514,9 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 		//We have focus on this vessel, and are in the VC
 		MoveFlashlight();
 	}
+
+	// Autosave (checks focus internally, reads config from file)
+	NASSPAutosave::Update(GetHandle(), GetName(), pMission->GetMissionName().c_str(), MissionTime);
 }
 
 
