@@ -2685,6 +2685,7 @@ public:
 	double GetGMTLO() { return SystemParameters.MCGMTL; }
 	void SetGMTLO(double gmt) { SystemParameters.MCGMTL = gmt; }
 	double CalcGETBase();
+	double CalcTEPHEM(double GMTLO) const;
 	double GetGMTBase() { return SystemParameters.GMTBASE; }
 	void SetGMTBase(double gmt) { SystemParameters.GMTBASE = gmt; }
 	double GETfromGMT(double GMT) const;
@@ -3655,7 +3656,7 @@ public:
 
 	struct VectorPanelSummaryDisplay
 	{
-		double gmt = 0.0;
+		double gmt = -10000000000000.0;
 		//0 = CSM, 1 = LM
 		std::string AnchorVectorID[2];
 		std::string AnchorVectorGMT[2];

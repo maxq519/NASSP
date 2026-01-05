@@ -602,8 +602,8 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 
 	//screen = 0;
 	REFSMMAT_LVLH_Time = 0.0;
+	REFSMMAT_ManNum = 1;
 	REFSMMATopt = 4;
-	REFSMMATcur = 4;
 	manpadopt = 0;
 	lemdescentstage = true;
 	mptinitmode = 3;
@@ -708,6 +708,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	GSLOSGET = 0.0;
 	PADSolGood = true;
 	Rendezvous_Target = NULL;
+	Rendezvous_Target_Table = RTCC_MPT_CSM;
 	iuvessel = NULL;
 	TLCCSolGood = true;
 
@@ -2785,9 +2786,7 @@ int ARCore::subThread()
 	break;
 	case 4:	//REFSMMAT Calculation
 	{
-		REFSMMATOpt opt;
 		int mptveh;
-
 		if (IsCSMCalculation)
 		{
 			mptveh = RTCC_MPT_CSM;
@@ -2797,6 +2796,61 @@ int ARCore::subThread()
 			mptveh = RTCC_MPT_LM;
 		}
 
+		if (GC->MissionPlanningActive)
+		{
+			if (REFSMMATopt == 0)
+			{
+				// Use MED
+				std::string medtype, veh, mannum, head, medstring;
+				REFSMMATLocker* refs;
+				int id;
+
+				if (mptveh == RTCC_MPT_CSM)
+				{
+					medtype = "G11";
+					veh = "CSM";
+					refs = &GC->rtcc->EZJGMTX1;
+				}
+				else
+				{
+					medtype = "G21";
+					veh = "LEM";
+					refs = &GC->rtcc->EZJGMTX3;
+				}
+				id = refs->data[RTCC_REFSMMAT_TYPE_DMT - 1].ID;
+
+				char Buff[128];
+				sprintf(Buff, "%d", REFSMMAT_ManNum);
+				mannum.assign(Buff);
+				if (REFSMMATHeadsUp)
+				{
+					head = "U";
+				}
+				else
+				{
+					head = "D";
+				}
+				medstring = medtype + "," + veh + ",DMT," + mannum + ",DES," + head + ";";
+				sprintf(Buff, "%s", medstring.c_str());
+				GC->rtcc->GMGMED(Buff);
+				//Check if REFSMMAT ID changed
+				if (id == refs->data[RTCC_REFSMMAT_TYPE_DMT - 1].ID)
+				{
+					Result = DONE;
+					break;
+				}
+				//Move REFSMMAT from DMT to CUR
+				medstring = "G00," + veh + ",DMT," + veh + ",CUR;";
+				sprintf(Buff, "%s", medstring.c_str());
+				GC->rtcc->GMGMED(Buff);
+
+				Result = DONE;
+				break;
+			}
+		}
+
+
+		REFSMMATOpt opt;
 		opt.dV_LVLH = dV_LVLH;
 		opt.LSAzi = GC->rtcc->med_k18.psi_DS*RAD;
 		opt.LSLat = GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST];
@@ -2884,7 +2938,7 @@ int ARCore::subThread()
 		{
 			opt.useSV = true;
 
-			if (REFSMMATopt == 0 || REFSMMATopt == 1 || REFSMMATopt == 2)
+			if (REFSMMATopt == 1 || REFSMMATopt == 2)
 			{
 				//SV at specified time
 				double GMT = GC->rtcc->GMTfromGET(opt.REFSMMATTime);
@@ -2966,11 +3020,6 @@ int ARCore::subThread()
 		{
 			GC->rtcc->EMGSTSTM(3, REFSMMAT, RTCC_REFSMMAT_TYPE_CUR, GC->rtcc->RTCCPresentTimeGMT());
 		}
-
-		//sprintf(oapiDebugString(), "%f, %f, %f, %f, %f, %f, %f, %f, %f", REFSMMAT.m11, REFSMMAT.m12, REFSMMAT.m13, REFSMMAT.m21, REFSMMAT.m22, REFSMMAT.m23, REFSMMAT.m31, REFSMMAT.m32, REFSMMAT.m33);
-
-		REFSMMATcur = REFSMMATopt;
-
 		Result = DONE;
 	}
 	break;
@@ -3541,7 +3590,13 @@ int ARCore::subThread()
 
 		if (GC->MissionPlanningActive)
 		{
-			if (GC->rtcc->NewMPTTrajectory(RTCC_MPT_LM, opt.sv0))
+			std::string StaID;
+			double GMTV;
+
+			//Use landing time minus 20 minutes as vector time
+			GMTV = GC->rtcc->GMTfromGET(GC->rtcc->CZTDTGTU.GETTD) - 20.0*60.0;
+
+			if (GC->rtcc->PMSVEC(RTCC_MPT_LM, true, GMTV, "", opt.sv0, StaID))
 			{
 				Result = DONE;
 				break;
@@ -4009,13 +4064,27 @@ int ARCore::subThread()
 	break;
 	case 23: //Calculate TPI times
 	{
-		if (Rendezvous_Target == NULL)
+		VehicleDataBlock sv0;
+		if (GC->MissionPlanningActive)
 		{
-			Result = DONE;
-			break;
+			std::string StaID;
+			if (GC->rtcc->PMSVEC(Rendezvous_Target_Table, true, GC->rtcc->GMTfromGET(t_TPIguess), "", sv0, StaID))
+			{
+				Result = DONE;
+				break;
+			}
 		}
-		SV sv0 = GC->rtcc->StateVectorCalc(Rendezvous_Target);
-		GC->t_TPI = GC->rtcc->CalculateTPITimes(sv0, TPI_Mode, t_TPIguess, dt_TPI_sunrise);
+		else
+		{
+			if (Rendezvous_Target == NULL)
+			{
+				Result = DONE;
+				break;
+			}
+			sv0 = GC->rtcc->StateVectorCalcDataBlock(Rendezvous_Target);
+		}
+		SV sv1 = GC->rtcc->ConvertEphemDatatoSV(sv0.sv, sv0.Weight);
+		GC->t_TPI = GC->rtcc->CalculateTPITimes(sv1, TPI_Mode, t_TPIguess, dt_TPI_sunrise);
 
 		Result = DONE;
 	}
