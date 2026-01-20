@@ -94,38 +94,38 @@ void SIMBay::DefineAnimations(UINT idx)
 	ANIMATIONCOMPONENT_HANDLE ach_SIMBAYGrp16DeployedZfr2;
 	static UINT SIMBAYGrp16[1] = { 14 };
 	const VECTOR3 COVER_PIVOT = { 1.08675, 1.51867, 1.29618 };    //Cover Pivot Point
-	static MGROUP_ROTATE mgr_SIMBAYGrp16Xfr1(idx, SIMBAYGrp16, 1, COVER_PIVOT, _V(1, 0, 0), (float)(RAD * -43.1));
-	static MGROUP_ROTATE mgr_SIMBAYGrp16Yfr1(idx, SIMBAYGrp16, 1, COVER_PIVOT, _V(0, 1, 0), (float)(RAD * 26));
-	static MGROUP_ROTATE mgr_SIMBAYGrp16Zfr1(idx, SIMBAYGrp16, 1, COVER_PIVOT, _V(0, 0, 1), (float)(RAD * 7.92));
-	static MGROUP_ROTATE mgr_SIMBAYGrp16Xfr2(idx, SIMBAYGrp16, 1, COVER_PIVOT, _V(1, 0, 0), (float)(RAD * -31.5));
-	static MGROUP_ROTATE mgr_SIMBAYGrp16Yfr2(idx, SIMBAYGrp16, 1, COVER_PIVOT, _V(0, 1, 0), (float)(RAD * 23.6));
-	static MGROUP_ROTATE mgr_SIMBAYGrp16Zfr2(idx, SIMBAYGrp16, 1, COVER_PIVOT, _V(0, 0, 1), (float)(RAD * -5));
+	MGROUP_ROTATE* mgr_SIMBAYGrp16Xfr1 = new MGROUP_ROTATE(idx, SIMBAYGrp16, 1, COVER_PIVOT, _V(1, 0, 0), (float)(RAD * -43.1));
+	MGROUP_ROTATE* mgr_SIMBAYGrp16Yfr1 = new MGROUP_ROTATE(idx, SIMBAYGrp16, 1, COVER_PIVOT, _V(0, 1, 0), (float)(RAD * 26));
+	MGROUP_ROTATE* mgr_SIMBAYGrp16Zfr1 = new MGROUP_ROTATE(idx, SIMBAYGrp16, 1, COVER_PIVOT, _V(0, 0, 1), (float)(RAD * 7.92));
+	MGROUP_ROTATE* mgr_SIMBAYGrp16Xfr2 = new MGROUP_ROTATE(idx, SIMBAYGrp16, 1, COVER_PIVOT, _V(1, 0, 0), (float)(RAD * -31.5));
+	MGROUP_ROTATE* mgr_SIMBAYGrp16Yfr2 = new MGROUP_ROTATE(idx, SIMBAYGrp16, 1, COVER_PIVOT, _V(0, 1, 0), (float)(RAD * 23.6));
+	MGROUP_ROTATE* mgr_SIMBAYGrp16Zfr2 = new MGROUP_ROTATE(idx, SIMBAYGrp16, 1, COVER_PIVOT, _V(0, 0, 1), (float)(RAD * -5));
 	MappingCameraCoverAnim = sat->CreateAnimation(0.0);
-	ach_SIMBAYGrp16DeployedXfr1 = sat->AddAnimationComponent(MappingCameraCoverAnim, 0.0, 0.5, &mgr_SIMBAYGrp16Yfr1);
-	ach_SIMBAYGrp16DeployedZfr1 = sat->AddAnimationComponent(MappingCameraCoverAnim, 0.0, 0.5, &mgr_SIMBAYGrp16Zfr1);
-	ach_SIMBAYGrp16DeployedYfr1 = sat->AddAnimationComponent(MappingCameraCoverAnim, 0.0, 0.5, &mgr_SIMBAYGrp16Xfr1);
-	ach_SIMBAYGrp16DeployedXfr2 = sat->AddAnimationComponent(MappingCameraCoverAnim, 0.5, 1.0, &mgr_SIMBAYGrp16Xfr2);
-	ach_SIMBAYGrp16DeployedZfr2 = sat->AddAnimationComponent(MappingCameraCoverAnim, 0.5, 1.0, &mgr_SIMBAYGrp16Yfr2);
-	ach_SIMBAYGrp16DeployedYfr2 = sat->AddAnimationComponent(MappingCameraCoverAnim, 0.5, 1.0, &mgr_SIMBAYGrp16Zfr2);
+	ach_SIMBAYGrp16DeployedXfr1 = sat->AddAnimationComponent(MappingCameraCoverAnim, 0.0, 0.5, mgr_SIMBAYGrp16Yfr1);
+	ach_SIMBAYGrp16DeployedZfr1 = sat->AddAnimationComponent(MappingCameraCoverAnim, 0.0, 0.5, mgr_SIMBAYGrp16Zfr1);
+	ach_SIMBAYGrp16DeployedYfr1 = sat->AddAnimationComponent(MappingCameraCoverAnim, 0.0, 0.5, mgr_SIMBAYGrp16Xfr1);
+	ach_SIMBAYGrp16DeployedXfr2 = sat->AddAnimationComponent(MappingCameraCoverAnim, 0.5, 1.0, mgr_SIMBAYGrp16Xfr2);
+	ach_SIMBAYGrp16DeployedZfr2 = sat->AddAnimationComponent(MappingCameraCoverAnim, 0.5, 1.0, mgr_SIMBAYGrp16Yfr2);
+	ach_SIMBAYGrp16DeployedYfr2 = sat->AddAnimationComponent(MappingCameraCoverAnim, 0.5, 1.0, mgr_SIMBAYGrp16Zfr2);
 
 	//Mapping Camera extend
 	ANIMATIONCOMPONENT_HANDLE ach_MappingGrp;
 	ANIMATIONCOMPONENT_HANDLE ach_ShadeGrp;
 	static UINT MappingGrp[9] = { 1,2,3,4,14,18,19,20,21 };
 	static UINT ShadeGrp[1] = { 21 };
-	static MGROUP_TRANSLATE mgt_MappingGrp(idx, MappingGrp, 9, _V(0.161347, 0.234723, 0));
-	static MGROUP_TRANSLATE mgt_ShadeGrp(idx, ShadeGrp, 1, _V(-0.119963, 0.084116, 0));
+	MGROUP_TRANSLATE* mgt_MappingGrp = new MGROUP_TRANSLATE(idx, MappingGrp, 9, _V(0.161347, 0.234723, 0));
+	MGROUP_TRANSLATE* mgt_ShadeGrp = new MGROUP_TRANSLATE(idx, ShadeGrp, 1, _V(-0.119963, 0.084116, 0));
 	MappingCameraAnim = sat->CreateAnimation(0.0);
-	ach_MappingGrp = sat->AddAnimationComponent(MappingCameraAnim, 0.0, 0.5, &mgt_MappingGrp);
-	ach_ShadeGrp = sat->AddAnimationComponent(MappingCameraAnim, 0.5, 1.0, &mgt_ShadeGrp);
+	ach_MappingGrp = sat->AddAnimationComponent(MappingCameraAnim, 0.0, 0.5, mgt_MappingGrp);
+	ach_ShadeGrp = sat->AddAnimationComponent(MappingCameraAnim, 0.5, 1.0, mgt_ShadeGrp);
 
 	//Panoramic Camera
 	ANIMATIONCOMPONENT_HANDLE ach_SIMBAYGrp9and10Z;
 	static UINT SIMBAYGrp9and10[2] = { 9,10 };
 	const VECTOR3 PAN_PIVOT = { 1.17471, 1.08905, 0.934385 };    //Camera Pivot Point
-	static MGROUP_ROTATE mgr_SIMBAYGrp9and10Z(idx, SIMBAYGrp9and10, 2, PAN_PIVOT, _V(0, 0, 1), (float)(RAD * 141));
+	MGROUP_ROTATE* mgr_SIMBAYGrp9and10Z = new MGROUP_ROTATE(idx, SIMBAYGrp9and10, 2, PAN_PIVOT, _V(0, 0, 1), (float)(RAD * 141));
 	PanoramicCameraAnim = sat->CreateAnimation(0.0);
-	ach_SIMBAYGrp9and10Z = sat->AddAnimationComponent(PanoramicCameraAnim, 0.0, 1.0, &mgr_SIMBAYGrp9and10Z);
+	ach_SIMBAYGrp9and10Z = sat->AddAnimationComponent(PanoramicCameraAnim, 0.0, 1.0, mgr_SIMBAYGrp9and10Z);
 
 	///CSM 112 Specific Animations
 	if (sat->pMission->GetPanel230Version() == 1)
@@ -152,34 +152,34 @@ void SIMBay::DefineAnimations(UINT idx)
 		static UINT GammaBayTubeGrp39[1] = { 39 };
 		static UINT GammaBaySpectGrp22[1] = { 22 };
 		const VECTOR3 GAMMA_COVER_PIVOT = { 0.99671, 1.41535, 0.788007 };    //Cover Pivot Point
-		static MGROUP_ROTATE mgr_GammaBayCoverGrp23(idx, GammaBayCoverGrp23, 1, GAMMA_COVER_PIVOT, _V(0, 0, 1), (float)(RAD * -146));
-		static MGROUP_TRANSLATE mgt_GammaBayTubeGrp32(idx, GammaBayTubeGrp32, 1, _V(0.40379, 0.522067, 0));
-		static MGROUP_TRANSLATE mgt_GammaBayTubeGrp33(idx, GammaBayTubeGrp33, 1, _V(0.80758, 1.04413, 0));
-		static MGROUP_TRANSLATE mgt_GammaBayTubeGrp34(idx, GammaBayTubeGrp34, 1, _V(1.21137, 1.5662, 0));
-		static MGROUP_TRANSLATE mgt_GammaBayTubeGrp35(idx, GammaBayTubeGrp35, 1, _V(1.61516, 2.08827, 0));
-		static MGROUP_TRANSLATE mgt_GammaBayTubeGrp36(idx, GammaBayTubeGrp36, 1, _V(2.01895, 2.61033, 0));
-		static MGROUP_TRANSLATE mgt_GammaBayTubeGrp37(idx, GammaBayTubeGrp37, 1, _V(2.42274, 3.1324, 0));
-		static MGROUP_TRANSLATE mgt_GammaBayTubeGrp38(idx, GammaBayTubeGrp38, 1, _V(2.82653, 3.65447, 0));
-		static MGROUP_TRANSLATE mgt_GammaBayTubeGrp39(idx, GammaBayTubeGrp39, 1, _V(3.23032, 4.17653, 0));
-		static MGROUP_TRANSLATE mgt_GammaBaySpectGrp22(idx, GammaBaySpectGrp22, 1, _V(3.23032, 4.17653, 0));
+		MGROUP_ROTATE* mgr_GammaBayCoverGrp23 = new MGROUP_ROTATE(idx, GammaBayCoverGrp23, 1, GAMMA_COVER_PIVOT, _V(0, 0, 1), (float)(RAD * -146));
+		MGROUP_TRANSLATE* mgt_GammaBayTubeGrp32 = new MGROUP_TRANSLATE(idx, GammaBayTubeGrp32, 1, _V(0.40379, 0.522067, 0));
+		MGROUP_TRANSLATE* mgt_GammaBayTubeGrp33 = new MGROUP_TRANSLATE(idx, GammaBayTubeGrp33, 1, _V(0.80758, 1.04413, 0));
+		MGROUP_TRANSLATE* mgt_GammaBayTubeGrp34 = new MGROUP_TRANSLATE(idx, GammaBayTubeGrp34, 1, _V(1.21137, 1.5662, 0));
+		MGROUP_TRANSLATE* mgt_GammaBayTubeGrp35 = new MGROUP_TRANSLATE(idx, GammaBayTubeGrp35, 1, _V(1.61516, 2.08827, 0));
+		MGROUP_TRANSLATE* mgt_GammaBayTubeGrp36 = new MGROUP_TRANSLATE(idx, GammaBayTubeGrp36, 1, _V(2.01895, 2.61033, 0));
+		MGROUP_TRANSLATE* mgt_GammaBayTubeGrp37 = new MGROUP_TRANSLATE(idx, GammaBayTubeGrp37, 1, _V(2.42274, 3.1324, 0));
+		MGROUP_TRANSLATE* mgt_GammaBayTubeGrp38 = new MGROUP_TRANSLATE(idx, GammaBayTubeGrp38, 1, _V(2.82653, 3.65447, 0));
+		MGROUP_TRANSLATE* mgt_GammaBayTubeGrp39 = new MGROUP_TRANSLATE(idx, GammaBayTubeGrp39, 1, _V(3.23032, 4.17653, 0));
+		MGROUP_TRANSLATE* mgt_GammaBaySpectGrp22 = new MGROUP_TRANSLATE(idx, GammaBaySpectGrp22, 1, _V(3.23032, 4.17653, 0));
 		GammaBayAnim = sat->CreateAnimation(0.0);
-		ach_GammaBayCoverGrp23 = sat->AddAnimationComponent(GammaBayAnim, 0.0, 0.01875, &mgr_GammaBayCoverGrp23);
-		ach_GammaBayTubeGrp32 = sat->AddAnimationComponent(GammaBayAnim, 0.01875, 1.0, &mgt_GammaBayTubeGrp32);
-		ach_GammaBayTubeGrp33 = sat->AddAnimationComponent(GammaBayAnim, 0.01875, 1.0, &mgt_GammaBayTubeGrp33);
-		ach_GammaBayTubeGrp34 = sat->AddAnimationComponent(GammaBayAnim, 0.01875, 1.0, &mgt_GammaBayTubeGrp34);
-		ach_GammaBayTubeGrp35 = sat->AddAnimationComponent(GammaBayAnim, 0.01875, 1.0, &mgt_GammaBayTubeGrp35);
-		ach_GammaBayTubeGrp36 = sat->AddAnimationComponent(GammaBayAnim, 0.01875, 1.0, &mgt_GammaBayTubeGrp36);
-		ach_GammaBayTubeGrp37 = sat->AddAnimationComponent(GammaBayAnim, 0.01875, 1.0, &mgt_GammaBayTubeGrp37);
-		ach_GammaBayTubeGrp38 = sat->AddAnimationComponent(GammaBayAnim, 0.01875, 1.0, &mgt_GammaBayTubeGrp38);
-		ach_GammaBayTubeGrp39 = sat->AddAnimationComponent(GammaBayAnim, 0.01875, 1.0, &mgt_GammaBayTubeGrp39);
-		ach_GammaBaySpectGrp22 = sat->AddAnimationComponent(GammaBayAnim, 0.01875, 1.0, &mgt_GammaBaySpectGrp22);
+		ach_GammaBayCoverGrp23 = sat->AddAnimationComponent(GammaBayAnim, 0.0, 0.01875, mgr_GammaBayCoverGrp23);
+		ach_GammaBayTubeGrp32 = sat->AddAnimationComponent(GammaBayAnim, 0.01875, 1.0, mgt_GammaBayTubeGrp32);
+		ach_GammaBayTubeGrp33 = sat->AddAnimationComponent(GammaBayAnim, 0.01875, 1.0, mgt_GammaBayTubeGrp33);
+		ach_GammaBayTubeGrp34 = sat->AddAnimationComponent(GammaBayAnim, 0.01875, 1.0, mgt_GammaBayTubeGrp34);
+		ach_GammaBayTubeGrp35 = sat->AddAnimationComponent(GammaBayAnim, 0.01875, 1.0, mgt_GammaBayTubeGrp35);
+		ach_GammaBayTubeGrp36 = sat->AddAnimationComponent(GammaBayAnim, 0.01875, 1.0, mgt_GammaBayTubeGrp36);
+		ach_GammaBayTubeGrp37 = sat->AddAnimationComponent(GammaBayAnim, 0.01875, 1.0, mgt_GammaBayTubeGrp37);
+		ach_GammaBayTubeGrp38 = sat->AddAnimationComponent(GammaBayAnim, 0.01875, 1.0, mgt_GammaBayTubeGrp38);
+		ach_GammaBayTubeGrp39 = sat->AddAnimationComponent(GammaBayAnim, 0.01875, 1.0, mgt_GammaBayTubeGrp39);
+		ach_GammaBaySpectGrp22 = sat->AddAnimationComponent(GammaBayAnim, 0.01875, 1.0, mgt_GammaBaySpectGrp22);
 
 		//Gamma Bay spectrometer Jett
 		ANIMATIONCOMPONENT_HANDLE ach_GammaBaySpectAllGrp;
 		static UINT GammaBaySpectAllGrp[10] = { 32, 33, 34, 35, 36, 37, 38, 39, 40, 22 };
-		static MGROUP_SCALE mgs_GammaBaySpectAllGrp(idx, GammaBaySpectAllGrp, 10, _V(0.47427, 0.982481, 0.783395), _V(0.00001, 0.00001, 0.00001));
+		MGROUP_SCALE* mgs_GammaBaySpectAllGrp = new MGROUP_SCALE(idx, GammaBaySpectAllGrp, 10, _V(0.47427, 0.982481, 0.783395), _V(0.00001, 0.00001, 0.00001));
 		GammaBayJettAnim = sat->CreateAnimation(0.0);
-		ach_GammaBaySpectAllGrp = sat->AddAnimationComponent(GammaBayJettAnim, 0.0, 1.0, &mgs_GammaBaySpectAllGrp);
+		ach_GammaBaySpectAllGrp = sat->AddAnimationComponent(GammaBayJettAnim, 0.0, 1.0, mgs_GammaBaySpectAllGrp);
 
 		//Mass Spectrometer deploy/retract
 		ANIMATIONCOMPONENT_HANDLE ach_MassSpecCoverGrp25Xfr1;
@@ -208,54 +208,54 @@ void SIMBay::DefineAnimations(UINT idx)
 		static UINT MassSpecTubeGrp48[1] = { 48 };
 		static UINT MassSpecGrp26[1] = { 26 };
 		const VECTOR3 MASS_COVER_PIVOT = { 1.54236, 1.05401, -0.653989 };    //Cover Pivot Point
-		static MGROUP_ROTATE mgr_MassSpecCoverGrp25Xfr1(idx, MassSpecCoverGrp25, 1, MASS_COVER_PIVOT, _V(1, 0, 0), (float)(RAD * 14.7469));
-		static MGROUP_ROTATE mgr_MassSpecCoverGrp25Zfr1(idx, MassSpecCoverGrp25, 1, MASS_COVER_PIVOT, _V(0, 0, 1), (float)(RAD * 11.8591));
-		static MGROUP_ROTATE mgr_MassSpecCoverGrp25Yfr1(idx, MassSpecCoverGrp25, 1, MASS_COVER_PIVOT, _V(0, 1, 0), (float)(RAD * -38.5816));
+		MGROUP_ROTATE* mgr_MassSpecCoverGrp25Xfr1 = new MGROUP_ROTATE(idx, MassSpecCoverGrp25, 1, MASS_COVER_PIVOT, _V(1, 0, 0), (float)(RAD * 14.7469));
+		MGROUP_ROTATE* mgr_MassSpecCoverGrp25Zfr1 = new MGROUP_ROTATE(idx, MassSpecCoverGrp25, 1, MASS_COVER_PIVOT, _V(0, 0, 1), (float)(RAD * 11.8591));
+		MGROUP_ROTATE* mgr_MassSpecCoverGrp25Yfr1 = new MGROUP_ROTATE(idx, MassSpecCoverGrp25, 1, MASS_COVER_PIVOT, _V(0, 1, 0), (float)(RAD * -38.5816));
 
-		static MGROUP_ROTATE mgr_MassSpecCoverGrp25Xfr2(idx, MassSpecCoverGrp25, 1, MASS_COVER_PIVOT, _V(1, 0, 0), (float)(RAD * 28.7469));
-		static MGROUP_ROTATE mgr_MassSpecCoverGrp25Zfr2(idx, MassSpecCoverGrp25, 1, MASS_COVER_PIVOT, _V(0, 0, 1), (float)(RAD * 11.8591));
-		static MGROUP_ROTATE mgr_MassSpecCoverGrp25Yfr2(idx, MassSpecCoverGrp25, 1, MASS_COVER_PIVOT, _V(0, 1, 0), (float)(RAD * -39.5816));
-		static MGROUP_TRANSLATE mgt_MassSpecTubeGrp41(idx, MassSpecTubeGrp41, 1, _V(0.588691, 0.298402, 0));
-		static MGROUP_TRANSLATE mgt_MassSpecTubeGrp42(idx, MassSpecTubeGrp42, 1, _V(1.17738, 0.596803, 0));
-		static MGROUP_TRANSLATE mgt_MassSpecTubeGrp43(idx, MassSpecTubeGrp43, 1, _V(1.76607, 0.895205, 0));
-		static MGROUP_TRANSLATE mgt_MassSpecTubeGrp44(idx, MassSpecTubeGrp44, 1, _V(2.35476, 1.19361, 0));
-		static MGROUP_TRANSLATE mgt_MassSpecTubeGrp45(idx, MassSpecTubeGrp45, 1, _V(2.94345, 1.49201, 0));
-		static MGROUP_TRANSLATE mgt_MassSpecTubeGrp46(idx, MassSpecTubeGrp46, 1, _V(3.53214, 1.79041, 0));
-		static MGROUP_TRANSLATE mgt_MassSpecTubeGrp47(idx, MassSpecTubeGrp47, 1, _V(4.12083, 2.08881, 0));
-		static MGROUP_TRANSLATE mgt_MassSpecTubeGrp48(idx, MassSpecTubeGrp48, 1, _V(4.70952, 2.38721, 0));
-		static MGROUP_TRANSLATE mgt_MassSpecGrp26(idx, MassSpecGrp26, 1, _V(4.70952, 2.38721, 0));
+		MGROUP_ROTATE* mgr_MassSpecCoverGrp25Xfr2 = new MGROUP_ROTATE(idx, MassSpecCoverGrp25, 1, MASS_COVER_PIVOT, _V(1, 0, 0), (float)(RAD * 28.7469));
+		MGROUP_ROTATE* mgr_MassSpecCoverGrp25Zfr2 = new MGROUP_ROTATE(idx, MassSpecCoverGrp25, 1, MASS_COVER_PIVOT, _V(0, 0, 1), (float)(RAD * 11.8591));
+		MGROUP_ROTATE* mgr_MassSpecCoverGrp25Yfr2 = new MGROUP_ROTATE(idx, MassSpecCoverGrp25, 1, MASS_COVER_PIVOT, _V(0, 1, 0), (float)(RAD * -39.5816));
+		MGROUP_TRANSLATE* mgt_MassSpecTubeGrp41 = new MGROUP_TRANSLATE(idx, MassSpecTubeGrp41, 1, _V(0.588691, 0.298402, 0));
+		MGROUP_TRANSLATE* mgt_MassSpecTubeGrp42 = new MGROUP_TRANSLATE(idx, MassSpecTubeGrp42, 1, _V(1.17738, 0.596803, 0));
+		MGROUP_TRANSLATE* mgt_MassSpecTubeGrp43 = new MGROUP_TRANSLATE(idx, MassSpecTubeGrp43, 1, _V(1.76607, 0.895205, 0));
+		MGROUP_TRANSLATE* mgt_MassSpecTubeGrp44 = new MGROUP_TRANSLATE(idx, MassSpecTubeGrp44, 1, _V(2.35476, 1.19361, 0));
+		MGROUP_TRANSLATE* mgt_MassSpecTubeGrp45 = new MGROUP_TRANSLATE(idx, MassSpecTubeGrp45, 1, _V(2.94345, 1.49201, 0));
+		MGROUP_TRANSLATE* mgt_MassSpecTubeGrp46 = new MGROUP_TRANSLATE(idx, MassSpecTubeGrp46, 1, _V(3.53214, 1.79041, 0));
+		MGROUP_TRANSLATE* mgt_MassSpecTubeGrp47 = new MGROUP_TRANSLATE(idx, MassSpecTubeGrp47, 1, _V(4.12083, 2.08881, 0));
+		MGROUP_TRANSLATE* mgt_MassSpecTubeGrp48 = new MGROUP_TRANSLATE(idx, MassSpecTubeGrp48, 1, _V(4.70952, 2.38721, 0));
+		MGROUP_TRANSLATE* mgt_MassSpecGrp26 = new MGROUP_TRANSLATE(idx, MassSpecGrp26, 1, _V(4.70952, 2.38721, 0));
 		MassSpectrometerAnim = sat->CreateAnimation(0.0);
-		ach_MassSpecCoverGrp25Xfr1 = sat->AddAnimationComponent(MassSpectrometerAnim, 0.0, 0.01875, &mgr_MassSpecCoverGrp25Yfr1);
-		ach_MassSpecCoverGrp25Yfr1 = sat->AddAnimationComponent(MassSpectrometerAnim, 0.0, 0.01875, &mgr_MassSpecCoverGrp25Zfr1);
-		ach_MassSpecCoverGrp25Zfr1 = sat->AddAnimationComponent(MassSpectrometerAnim, 0.0, 0.01875, &mgr_MassSpecCoverGrp25Xfr1);
+		ach_MassSpecCoverGrp25Xfr1 = sat->AddAnimationComponent(MassSpectrometerAnim, 0.0, 0.01875, mgr_MassSpecCoverGrp25Yfr1);
+		ach_MassSpecCoverGrp25Yfr1 = sat->AddAnimationComponent(MassSpectrometerAnim, 0.0, 0.01875, mgr_MassSpecCoverGrp25Zfr1);
+		ach_MassSpecCoverGrp25Zfr1 = sat->AddAnimationComponent(MassSpectrometerAnim, 0.0, 0.01875, mgr_MassSpecCoverGrp25Xfr1);
 
-		ach_MassSpecCoverGrp25Xfr2 = sat->AddAnimationComponent(MassSpectrometerAnim, 0.0, 0.01875, &mgr_MassSpecCoverGrp25Yfr2);
-		ach_MassSpecCoverGrp25Yfr2 = sat->AddAnimationComponent(MassSpectrometerAnim, 0.0, 0.01875, &mgr_MassSpecCoverGrp25Zfr2);
-		ach_MassSpecCoverGrp25Zfr2 = sat->AddAnimationComponent(MassSpectrometerAnim, 0.0, 0.01875, &mgr_MassSpecCoverGrp25Xfr2);
-		ach_MassSpecTubeGrp41 = sat->AddAnimationComponent(MassSpectrometerAnim, 0.01875, 1.0, &mgt_MassSpecTubeGrp41);
-		ach_MassSpecTubeGrp42 = sat->AddAnimationComponent(MassSpectrometerAnim, 0.01875, 1.0, &mgt_MassSpecTubeGrp42);
-		ach_MassSpecTubeGrp43 = sat->AddAnimationComponent(MassSpectrometerAnim, 0.01875, 1.0, &mgt_MassSpecTubeGrp43);
-		ach_MassSpecTubeGrp44 = sat->AddAnimationComponent(MassSpectrometerAnim, 0.01875, 1.0, &mgt_MassSpecTubeGrp44);
-		ach_MassSpecTubeGrp45 = sat->AddAnimationComponent(MassSpectrometerAnim, 0.01875, 1.0, &mgt_MassSpecTubeGrp45);
-		ach_MassSpecTubeGrp46 = sat->AddAnimationComponent(MassSpectrometerAnim, 0.01875, 1.0, &mgt_MassSpecTubeGrp46);
-		ach_MassSpecTubeGrp47 = sat->AddAnimationComponent(MassSpectrometerAnim, 0.01875, 1.0, &mgt_MassSpecTubeGrp47);
-		ach_MassSpecTubeGrp48 = sat->AddAnimationComponent(MassSpectrometerAnim, 0.01875, 1.0, &mgt_MassSpecTubeGrp48);
-		ach_MassSpecGrp26 = sat->AddAnimationComponent(MassSpectrometerAnim, 0.01875, 1.0, &mgt_MassSpecGrp26);
+		ach_MassSpecCoverGrp25Xfr2 = sat->AddAnimationComponent(MassSpectrometerAnim, 0.0, 0.01875, mgr_MassSpecCoverGrp25Yfr2);
+		ach_MassSpecCoverGrp25Yfr2 = sat->AddAnimationComponent(MassSpectrometerAnim, 0.0, 0.01875, mgr_MassSpecCoverGrp25Zfr2);
+		ach_MassSpecCoverGrp25Zfr2 = sat->AddAnimationComponent(MassSpectrometerAnim, 0.0, 0.01875, mgr_MassSpecCoverGrp25Xfr2);
+		ach_MassSpecTubeGrp41 = sat->AddAnimationComponent(MassSpectrometerAnim, 0.01875, 1.0, mgt_MassSpecTubeGrp41);
+		ach_MassSpecTubeGrp42 = sat->AddAnimationComponent(MassSpectrometerAnim, 0.01875, 1.0, mgt_MassSpecTubeGrp42);
+		ach_MassSpecTubeGrp43 = sat->AddAnimationComponent(MassSpectrometerAnim, 0.01875, 1.0, mgt_MassSpecTubeGrp43);
+		ach_MassSpecTubeGrp44 = sat->AddAnimationComponent(MassSpectrometerAnim, 0.01875, 1.0, mgt_MassSpecTubeGrp44);
+		ach_MassSpecTubeGrp45 = sat->AddAnimationComponent(MassSpectrometerAnim, 0.01875, 1.0, mgt_MassSpecTubeGrp45);
+		ach_MassSpecTubeGrp46 = sat->AddAnimationComponent(MassSpectrometerAnim, 0.01875, 1.0, mgt_MassSpecTubeGrp46);
+		ach_MassSpecTubeGrp47 = sat->AddAnimationComponent(MassSpectrometerAnim, 0.01875, 1.0, mgt_MassSpecTubeGrp47);
+		ach_MassSpecTubeGrp48 = sat->AddAnimationComponent(MassSpectrometerAnim, 0.01875, 1.0, mgt_MassSpecTubeGrp48);
+		ach_MassSpecGrp26 = sat->AddAnimationComponent(MassSpectrometerAnim, 0.01875, 1.0, mgt_MassSpecGrp26);
 
 		//Mass spectrometer Jett
 		ANIMATIONCOMPONENT_HANDLE ach_MassSpectAllGrp;
 		static UINT MassSpectAllGrp[10] = { 11, 26, 41, 42, 43, 44, 45, 46, 47, 48 };
-		static MGROUP_SCALE mgs_MassSpectAllGrp(idx, MassSpectAllGrp, 10, _V(0.827439, 0.71798, 0.790792), _V(0.00001, 0.00001, 0.00001));
+		MGROUP_SCALE* mgs_MassSpectAllGrp = new MGROUP_SCALE(idx, MassSpectAllGrp, 10, _V(0.827439, 0.71798, 0.790792), _V(0.00001, 0.00001, 0.00001));
 		MassSpectrometerJettAnim = sat->CreateAnimation(0.0);
-		ach_MassSpectAllGrp = sat->AddAnimationComponent(MassSpectrometerJettAnim, 0.0, 1.0, &mgs_MassSpectAllGrp);
+		ach_MassSpectAllGrp = sat->AddAnimationComponent(MassSpectrometerJettAnim, 0.0, 1.0, mgs_MassSpectAllGrp);
 
 		//XRay Cover
 		ANIMATIONCOMPONENT_HANDLE ach_SIMBAYGrp30;
 		static UINT SIMBAYGrp30[1] = { 30 };
 		const VECTOR3 XRAY_COVER_PIVOT = { 0.700664, 1.654, -1.654 };    //Cover Pivot Point
-		static MGROUP_ROTATE mgr_SIMBAYGrp30(idx, SIMBAYGrp30, 1, XRAY_COVER_PIVOT, _V(0, 0, 1), (float)(RAD * 128));
+		MGROUP_ROTATE* mgr_SIMBAYGrp30 = new MGROUP_ROTATE(idx, SIMBAYGrp30, 1, XRAY_COVER_PIVOT, _V(0, 0, 1), (float)(RAD * 128));
 		XRayCoverAnim = sat->CreateAnimation(0.0);
-		ach_SIMBAYGrp30 = sat->AddAnimationComponent(XRayCoverAnim, 0.0, 1.0, &mgr_SIMBAYGrp30);
+		ach_SIMBAYGrp30 = sat->AddAnimationComponent(XRayCoverAnim, 0.0, 1.0, mgr_SIMBAYGrp30);
 
 		//SubSatellite Launch
 		ANIMATIONCOMPONENT_HANDLE ach_SIMBAYGrp7and31X;
@@ -263,13 +263,13 @@ void SIMBay::DefineAnimations(UINT idx)
 		ANIMATIONCOMPONENT_HANDLE ach_SIMBAYGrp7and31Y;
 		static UINT SIMBAYGrp7and31[2] = { 7,31 };
 		const VECTOR3 SUBSAT_COVER_PIVOT = { 0.735741, 1.74082, -0.619339 };    //Cover Pivot Point
-		static MGROUP_ROTATE mgr_SIMBAYGrp7and31X(idx, SIMBAYGrp7and31, 2, SUBSAT_COVER_PIVOT, _V(1, 0, 0), (float)(RAD * -90));
-		static MGROUP_ROTATE mgr_SIMBAYGrp7and31Z(idx, SIMBAYGrp7and31, 2, SUBSAT_COVER_PIVOT, _V(0, 0, 1), (float)(RAD * -17.4));
-		static MGROUP_ROTATE mgr_SIMBAYGrp7and31Y(idx, SIMBAYGrp7and31, 2, SUBSAT_COVER_PIVOT, _V(0, 1, 0), (float)(RAD * 18.5));
+		MGROUP_ROTATE* mgr_SIMBAYGrp7and31X = new MGROUP_ROTATE(idx, SIMBAYGrp7and31, 2, SUBSAT_COVER_PIVOT, _V(1, 0, 0), (float)(RAD * -90));
+		MGROUP_ROTATE* mgr_SIMBAYGrp7and31Z = new MGROUP_ROTATE(idx, SIMBAYGrp7and31, 2, SUBSAT_COVER_PIVOT, _V(0, 0, 1), (float)(RAD * -17.4));
+		MGROUP_ROTATE* mgr_SIMBAYGrp7and31Y = new MGROUP_ROTATE(idx, SIMBAYGrp7and31, 2, SUBSAT_COVER_PIVOT, _V(0, 1, 0), (float)(RAD * 18.5));
 		SubSatCoverAnim = sat->CreateAnimation(0.0);
-		ach_SIMBAYGrp7and31X = sat->AddAnimationComponent(SubSatCoverAnim, 0.0, 1.0, &mgr_SIMBAYGrp7and31X);
-		ach_SIMBAYGrp7and31Y = sat->AddAnimationComponent(SubSatCoverAnim, 0.0, 1.0, &mgr_SIMBAYGrp7and31Y);
-		ach_SIMBAYGrp7and31Z = sat->AddAnimationComponent(SubSatCoverAnim, 0.5, 1.0, &mgr_SIMBAYGrp7and31Z);
+		ach_SIMBAYGrp7and31X = sat->AddAnimationComponent(SubSatCoverAnim, 0.0, 1.0, mgr_SIMBAYGrp7and31X);
+		ach_SIMBAYGrp7and31Y = sat->AddAnimationComponent(SubSatCoverAnim, 0.0, 1.0, mgr_SIMBAYGrp7and31Y);
+		ach_SIMBAYGrp7and31Z = sat->AddAnimationComponent(SubSatCoverAnim, 0.5, 1.0, mgr_SIMBAYGrp7and31Z);
 	}
 		
 	///CSM 114 Specific Animations:
@@ -284,21 +284,21 @@ void SIMBay::DefineAnimations(UINT idx)
 		ANIMATIONCOMPONENT_HANDLE ach_SIMBAYGrp6DeployedZfr2;
 		static UINT SIMBAYGrp6[1] = { 6 };
 		const VECTOR3 IR_COVER_PIVOT = { 1.06147, 1.3724, -0.769505 };    //Cover Pivot Point
-		static MGROUP_ROTATE mgr_SIMBAYGrp6Xfr1(idx, SIMBAYGrp6, 1, IR_COVER_PIVOT, _V(1, 0, 0), (float)(RAD * 62.7));
-		static MGROUP_ROTATE mgr_SIMBAYGrp6Yfr1(idx, SIMBAYGrp6, 1, IR_COVER_PIVOT, _V(0, 1, 0), (float)(RAD * -43.2));
-		static MGROUP_ROTATE mgr_SIMBAYGrp6Zfr1(idx, SIMBAYGrp6, 1, IR_COVER_PIVOT, _V(0, 0, 1), (float)(RAD * 26.9));
+		MGROUP_ROTATE* mgr_SIMBAYGrp6Xfr1 = new MGROUP_ROTATE(idx, SIMBAYGrp6, 1, IR_COVER_PIVOT, _V(1, 0, 0), (float)(RAD * 62.7));
+		MGROUP_ROTATE* mgr_SIMBAYGrp6Yfr1 = new MGROUP_ROTATE(idx, SIMBAYGrp6, 1, IR_COVER_PIVOT, _V(0, 1, 0), (float)(RAD * -43.2));
+		MGROUP_ROTATE* mgr_SIMBAYGrp6Zfr1 = new MGROUP_ROTATE(idx, SIMBAYGrp6, 1, IR_COVER_PIVOT, _V(0, 0, 1), (float)(RAD * 26.9));
 		IRCoverAnim = sat->CreateAnimation(0.0);
-		ach_SIMBAYGrp6DeployedXfr1 = sat->AddAnimationComponent(IRCoverAnim, 0.0, 1.0, &mgr_SIMBAYGrp6Yfr1);
-		ach_SIMBAYGrp6DeployedZfr1 = sat->AddAnimationComponent(IRCoverAnim, 0.0, 1.0, &mgr_SIMBAYGrp6Zfr1);
-		ach_SIMBAYGrp6DeployedYfr1 = sat->AddAnimationComponent(IRCoverAnim, 0.0, 1.0, &mgr_SIMBAYGrp6Xfr1);
+		ach_SIMBAYGrp6DeployedXfr1 = sat->AddAnimationComponent(IRCoverAnim, 0.0, 1.0, mgr_SIMBAYGrp6Yfr1);
+		ach_SIMBAYGrp6DeployedZfr1 = sat->AddAnimationComponent(IRCoverAnim, 0.0, 1.0, mgr_SIMBAYGrp6Zfr1);
+		ach_SIMBAYGrp6DeployedYfr1 = sat->AddAnimationComponent(IRCoverAnim, 0.0, 1.0, mgr_SIMBAYGrp6Xfr1);
 
 		///UV Spect Cover
 		ANIMATIONCOMPONENT_HANDLE ach_SIMBAYGrp17DeployedZ;
 		static UINT SIMBAYGrp17[1] = { 17 };
 		const VECTOR3 UV_COVER_PIVOT = { 0.527138, 1.81048, -0.834598 };    //Cover Pivot Point
-		static MGROUP_ROTATE mgr_SIMBAYGrp17Z(idx, SIMBAYGrp17, 1, UV_COVER_PIVOT, _V(0, 0, 1), (float)(RAD * 128));
+		MGROUP_ROTATE* mgr_SIMBAYGrp17Z = new MGROUP_ROTATE(idx, SIMBAYGrp17, 1, UV_COVER_PIVOT, _V(0, 0, 1), (float)(RAD * 128));
 		UVCoverAnim = sat->CreateAnimation(0.0);
-		ach_SIMBAYGrp17DeployedZ = sat->AddAnimationComponent(UVCoverAnim, 0.0, 1.0, &mgr_SIMBAYGrp17Z);
+		ach_SIMBAYGrp17DeployedZ = sat->AddAnimationComponent(UVCoverAnim, 0.0, 1.0, mgr_SIMBAYGrp17Z);
 	}
 }
 
