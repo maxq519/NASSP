@@ -3833,11 +3833,9 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 					ORDEALSlewSwitch.SwitchTo(THREEPOSSWITCH_DOWN, true);
 				}
 				return 1;
-			case OAPI_KEY_E:
-				if (SideHatch.IsOpen() && !cmpeva) StartCMPEVA();
-				return 1;
 			}
-		} else {
+		}
+		else {
 			switch (key) {
 			case OAPI_KEY_O:
 			case OAPI_KEY_L:

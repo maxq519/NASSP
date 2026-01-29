@@ -1110,6 +1110,7 @@ public:
 	virtual void SetCrewNumber(int number);
 	virtual void SetPrimECSTestHeaterPowerW(double power);
 	virtual void SetSecECSTestHeaterPowerW(double power);
+	virtual void StartCMPEVA();
 
 	///
 	/// Enable or disable generic Service Module systems based on current state.
@@ -1334,7 +1335,7 @@ public:
 	//
 	// CSM EVA
 	//
-	void StartCMPEVA();
+	void ToggleCMPEVA();
 
 	void UpdateEVA(void);
 
