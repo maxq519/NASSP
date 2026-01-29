@@ -2296,6 +2296,11 @@ void Saturn::StartCMPEVA()
 
 	EVA* eva = (EVA*)oapiGetVesselInterface(hCMPEVA);
 
+	EVASettings evas;
+
+	evas.MissionNo = ApolloNo;
+	eva->SetEVAStats(evas);
+
 	oapiSetFocusObject(hCMPEVA);
 }
 

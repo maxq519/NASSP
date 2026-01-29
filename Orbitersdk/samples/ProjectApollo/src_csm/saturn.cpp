@@ -3834,7 +3834,7 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 				}
 				return 1;
 			case OAPI_KEY_E:
-				if (/*SideHatch.IsOpen() &&*/ !cmpeva) StartCMPEVA();
+				if (SideHatch.IsOpen() && !cmpeva) StartCMPEVA();
 				return 1;
 			}
 		} else {

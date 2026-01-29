@@ -60,15 +60,78 @@ static TOUCHDOWNVTX tdvtx_geardown[3] = {
 EVA::EVA(OBJHANDLE hVessel, int flightmodel)
 	: VESSEL3(hVessel, flightmodel)
 {
+	init();
 }
 
 EVA::~EVA()
 {
 }
 
+void EVA::init()
+
+{
+	FirstTimestep = true;
+	StateSet = false;
+	ApolloNo = 0;
+}
+
+void EVA::SetEVAStats(EVASettings& evas)
+
+{
+	ApolloNo = evas.MissionNo;
+	StateSet = true;
+}
+
+void EVA::DoFirstTimestep()
+{
+	if (StateSet)
+	{
+
+		VECTOR3 mesh_dir = _V(0, 0, 0);
+
+		if (ApolloNo == 9)
+			AddMesh("ProjectApollo/CM-CMPEVA-9", &mesh_dir);
+		else
+			AddMesh("ProjectApollo/CM-CMPEVA", &mesh_dir);
+
+		FirstTimestep = false;
+	}
+}
+
+typedef union {
+	struct {
+		unsigned int StateSet : 1;
+	} u;
+	unsigned int word;
+} MainEVAState;
+
+int EVA::GetMainState()
+
+{
+	MainEVAState s;
+
+	s.word = 0;
+	s.u.StateSet = StateSet;
+
+	return s.word;
+}
+
+void EVA::SetMainState(int n)
+
+{
+	MainEVAState s;
+
+	s.word = n;
+	StateSet = (s.u.StateSet != 0);
+}
+
 void EVA::clbkSetClassCaps(FILEHANDLE cfg)
 {
+	SetAstroStage();
+}
 
+void EVA::SetAstroStage()
+{
 	// physical specs
 	SetCW(1, 1, 1, 1);
 	SetRotDrag(_V(1, 1, 1));
@@ -76,8 +139,7 @@ void EVA::clbkSetClassCaps(FILEHANDLE cfg)
 	SetCrossSections(_V(0.5, 0.3, 0.7));
 	SetSize(1);
 	SetEmptyMass(EMP_MASS);
-	SetMeshVisibilityMode((AddMesh("ProjectApollo/CM-CMPEVA")), MESHVIS_ALWAYS);
-
+	ClearMeshes();
 	SetCameraOffset(_V(0, 1, 0));
 	SetTouchdownPoints(tdvtx_geardown, 3);
 
@@ -200,4 +262,43 @@ int EVA::clbkConsumeBufferedKey(DWORD key, bool down, char* kstate)
 
 void EVA::clbkPreStep(double SimT, double SimDT, double MJD)
 {
+	if (FirstTimestep)
+	{
+		DoFirstTimestep();
+		return;
+	}
+}
+
+void EVA::clbkLoadStateEx(FILEHANDLE scn, void* vs)
+{
+	char* line;
+
+	while (oapiReadScenario_nextline(scn, line)) 
+	{
+		if (!strnicmp(line, "MISSIONNO", 9)) {
+			sscanf(line + 9, "%d", &ApolloNo);
+	    }
+		else if (!strnicmp(line, "STATE", 5)) {
+			int	s;
+			sscanf(line + 5, "%d", &s);
+			SetMainState(s);
+		}
+		else {
+			ParseScenarioLineEx(line, vs);
+		}
+	}
+}
+
+void EVA::clbkSaveState(FILEHANDLE scn)
+{
+	VESSEL3::clbkSaveState(scn);
+
+	int s = GetMainState();
+	if (s) {
+		oapiWriteScenario_int(scn, "STATE", s);
+	}
+
+	if (ApolloNo != 0) {
+		oapiWriteScenario_int(scn, "MISSIONNO", ApolloNo);
+	}
 }

@@ -24,15 +24,29 @@
 
 class Saturn;
 
+typedef struct {
+
+	int MissionNo;			///< Apollo mission number.
+
+} EVASettings;
+
 class EVA : public VESSEL3 {
 public:
 
 	EVA(OBJHANDLE hVessel, int flightmodel);
+	void init();
 	~EVA();
 	void clbkPreStep(double SimT, double SimDT, double MJD);
 	int clbkConsumeBufferedKey(DWORD key, bool down, char* kstate);
 	void clbkSetClassCaps(FILEHANDLE cfg);
+	void SetAstroStage();
 	void clbkPostCreation();
+	virtual void SetEVAStats(EVASettings &evas);
+	void DoFirstTimestep();
+	void SetMainState(int s);
+	int GetMainState();
+	void clbkLoadStateEx(FILEHANDLE scn, void* vs);
+	void clbkSaveState(FILEHANDLE scn);
 
 private:
 	void ScanMotherShip();
@@ -47,5 +61,6 @@ protected:
 	bool GoDock1;
 	bool MotherShip;
 	char CSMName[256];
+	bool FirstTimestep;
+	bool StateSet;
 };
-
