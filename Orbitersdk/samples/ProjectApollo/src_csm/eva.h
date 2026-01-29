@@ -22,71 +22,30 @@
 
   **************************************************************************/
 
-///
-/// \ingroup AstronautSettings
-/// \brief EVA settings.
-///
-typedef struct {
+class Saturn;
 
-	int MissionNo;			///< Apollo mission number.
-	int Realism;			///< Realism level.
-
-} EVASettings;
-
-///
-/// \ingroup Astronauts
-/// \brief Orbital EVA astronaut.
-///
-class EVA: public VESSEL2
-{
+class EVA : public VESSEL3 {
 public:
-	///
-	/// \brief Standard constructor with the usual Orbiter parameters.
-	///
-	EVA (OBJHANDLE hObj, int fmodel);
-	virtual ~EVA();
 
-	///
-	/// \brief Initialise state.
-	///
-	void init();
+	EVA(OBJHANDLE hVessel, int flightmodel);
+	~EVA();
+	void clbkPreStep(double SimT, double SimDT, double MJD);
+	int clbkConsumeBufferedKey(DWORD key, bool down, char* kstate);
+	void clbkSetClassCaps(FILEHANDLE cfg);
+	void clbkPostCreation();
 
-	///
-	/// \brief Orbiter timestep function.
-	/// \param SimT Current simulation time, in seconds since Orbiter was started.
-	/// \param SimDT Time in seconds since last timestep.
-	/// \param mjd Current MJD.
-	///
-	void clbkPreStep (double SimT, double SimDT, double mjd);
+private:
+	void ScanMotherShip();
 
-	///
-	/// \brief Orbiter keyboard input function.
-	/// \param kstate Key state.
-	///
-	int clbkConsumeDirectKey(char *kstate);
-
-	///
-	/// \brief Orbiter class configuration function.
-	/// \param cfg File to load configuration defaults from.
-	///
-	void clbkSetClassCaps (FILEHANDLE cfg);
-
-	///
-	/// \brief Orbiter state saving function.
-	/// \param scn Scenario file to save to.
-	///
-	void clbkSaveState (FILEHANDLE scn);
-
-	///
-	/// \brief Orbiter state loading function.
-	/// \param scn Scenario file to load from.
-	/// \param status Pointer to current vessel status.
-	///
-	void clbkLoadStateEx (FILEHANDLE scn, void *status);
+	THRUSTER_HANDLE th_rcs[16], th_group[2];
+	PROPELLANT_HANDLE hProp;
+	ATTACHMENTHANDLE hAttach;
 
 protected:
-
+	int ApolloNo;
+	OBJHANDLE hMaster;
 	bool GoDock1;
-
+	bool MotherShip;
+	char CSMName[256];
 };
 

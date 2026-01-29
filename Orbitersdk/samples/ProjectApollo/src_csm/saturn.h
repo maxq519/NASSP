@@ -1331,6 +1331,17 @@ public:
 	//
 	void QuicksaveScenario();
 
+	//
+	// CSM EVA
+	//
+	void StartCMPEVA();
+
+	void UpdateEVA(void);
+
+	OBJHANDLE hCMPEVA;
+
+	int cmpeva; //CMP EVA Started or not
+
 protected:
 
 	///
