@@ -1332,6 +1332,9 @@ public:
 	//
 	void QuicksaveScenario();
 
+
+
+
 	//
 	// CSM EVA
 	//

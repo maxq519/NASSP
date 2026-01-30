@@ -52,6 +52,7 @@
 #include "iu.h"
 #include "Mission.h"
 
+
 #include "eva.h"
 
 #include <crtdbg.h>
@@ -1620,6 +1621,8 @@ void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 		//We have focus on this vessel, and are in the VC
 		MoveFlashlight();
 	}
+
+	
 
 	if (cmpeva)UpdateEVA(); //if cmp eva active (vessel created), enables EVA Timestep
 

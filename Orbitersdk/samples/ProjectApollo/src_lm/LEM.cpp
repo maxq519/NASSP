@@ -1487,6 +1487,8 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 		MoveFlashlight();
 	}
 
+
+
 	if (spaceeva)UpdateSpaceEVA(); //if cmp eva active (vessel created), enables EVA Timestep
 }
 
