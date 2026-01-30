@@ -73,6 +73,7 @@ void EVA::init()
 	FirstTimestep = true;
 	StateSet = false;
 	ApolloNo = 0;
+	isLMP = false;
 }
 
 void EVA::SetEVAStats(EVASettings& evas)
@@ -80,6 +81,7 @@ void EVA::SetEVAStats(EVASettings& evas)
 {
 	ApolloNo = evas.MissionNo;
 	StateSet = true;
+	isLMP = evas.isLMP;
 }
 
 void EVA::DoFirstTimestep()
@@ -90,9 +92,20 @@ void EVA::DoFirstTimestep()
 		VECTOR3 mesh_dir = _V(0, 0, 0);
 
 		if (ApolloNo == 9)
-			AddMesh("ProjectApollo/CM-CMPEVA-9", &mesh_dir);
+		{
+			if (isLMP)
+			{
+				AddMesh("ProjectApollo/LM-LMPEVA-9", &mesh_dir);
+			}
+			else
+			{
+				AddMesh("ProjectApollo/CM-CMPEVA-9", &mesh_dir);
+			}
+		}
 		else
+		{
 			AddMesh("ProjectApollo/CM-CMPEVA", &mesh_dir);
+		}
 
 		FirstTimestep = false;
 	}
@@ -101,6 +114,7 @@ void EVA::DoFirstTimestep()
 typedef union {
 	struct {
 		unsigned int StateSet : 1;
+		unsigned int isLMP : 1;
 	} u;
 	unsigned int word;
 } MainEVAState;
@@ -112,6 +126,7 @@ int EVA::GetMainState()
 
 	s.word = 0;
 	s.u.StateSet = StateSet;
+	s.u.isLMP = isLMP;
 
 	return s.word;
 }
@@ -123,6 +138,7 @@ void EVA::SetMainState(int n)
 
 	s.word = n;
 	StateSet = (s.u.StateSet != 0);
+	isLMP = (s.u.isLMP != 0);
 }
 
 void EVA::clbkSetClassCaps(FILEHANDLE cfg)

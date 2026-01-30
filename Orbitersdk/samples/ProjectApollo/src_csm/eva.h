@@ -27,6 +27,7 @@ class Saturn;
 typedef struct {
 
 	int MissionNo;			///< Apollo mission number.
+	bool isLMP;				///< Flag for CMP vs. LMP.
 
 } EVASettings;
 
@@ -63,4 +64,5 @@ protected:
 	char CSMName[256];
 	bool FirstTimestep;
 	bool StateSet;
+	bool isLMP;
 };

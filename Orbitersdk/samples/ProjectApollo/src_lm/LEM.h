@@ -748,6 +748,12 @@ protected:
 	void SetPowerFailureLight(int m, bool state);
 	void SetStageSeqRelayLight(int m, bool state);
 
+	void ToggleSpaceEVA();
+
+	void UpdateSpaceEVA(void);
+
+	OBJHANDLE hSPACEEVA;
+
 #ifdef _OPENORBITER
 	void SetVCLighting(UINT meshidx, DWORD *matList, MatProp EmissionMode, double state, int cnt);
 	void SetVCLighting(UINT meshidx, int material, MatProp EmissionMode, double state, int cnt);
@@ -1612,6 +1618,8 @@ protected:
 
 	int CDRinPLSS;
 	int LMPinPLSS;
+
+	int spaceeva;
 
 #define LMVIEW_CDR		 0
 #define LMVIEW_LMP		 1
