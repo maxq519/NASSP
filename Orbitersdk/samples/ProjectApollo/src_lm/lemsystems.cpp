@@ -2338,6 +2338,9 @@ void LEM::GetECSStatus(LEMECSStatus &ecs)
 
 	//Urine
 	ecs.UCTAStatus = ForwardHatch.GetLMUCDPct();
+
+	ecs.cdrName = pMission->GetCDRName();
+	ecs.lmpName = pMission->GetLMPName();
 }
 
 void LEM::SetCrewNumber(int number)
