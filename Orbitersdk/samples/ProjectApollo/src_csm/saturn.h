@@ -1129,6 +1129,8 @@ public:
 	virtual void SetPrimECSTestHeaterPowerW(double power);
 	virtual void SetSecECSTestHeaterPowerW(double power);
 
+	virtual void StartCMPEVA();
+
 	///
 	/// Enable or disable generic Service Module systems based on current state.
 	/// \brief Check SM systems state.
@@ -1352,6 +1354,24 @@ public:
 	// Custom quicksave behaviour
 	//
 	void QuicksaveScenario();
+
+	//CSM Running Lights
+	void SetRunningLights();
+
+	VECTOR3 runningLightsPos[8];
+	BEACONLIGHTSPEC runningLights[8];             // running lights
+	//
+    // CSM EVA
+    //
+	void ToggleCMPEVA();
+
+	void UpdateEVA(void);
+
+	virtual void StopEVA();
+
+	OBJHANDLE hCMPEVA;
+
+	int cmpeva; //CMP EVA Started or not
 
 protected:
 
@@ -3823,6 +3843,7 @@ protected:
 	// Electric Lights
 	ElectricLight* SpotLight;
 	ElectricLight* RndzLight;
+	ElectricLight* EVALight;
 
 	// O2 Tanks
 	h_Tank *O2Tanks[2];
@@ -3928,6 +3949,10 @@ protected:
 
 	ThreePhasePowerMerge SuitCompressor1Feeder;
 	ThreePhasePowerMerge SuitCompressor2Feeder;
+
+	// Exterior Lighting
+	ExteriorLighting ExteriorLighting;
+	PowerMerge RunEVAFeeder;
 
 	// GSE
 	Pump* GSEGlycolPump;
@@ -4112,6 +4137,7 @@ protected:
 	int coascdridx;
 	int coascdrreticleidx;
 	DEVMESHHANDLE vcmesh;
+	int smidx;
 
 
 	double DockAngle;
@@ -4819,6 +4845,7 @@ protected:
 	friend class AR_GCore;
 	friend class ApolloRTCCMFD;
 	friend class RTCC;
+	friend class ExteriorLighting;
 
 	// Friend class Simbay equipment
 	friend class HF_Antenna_1;

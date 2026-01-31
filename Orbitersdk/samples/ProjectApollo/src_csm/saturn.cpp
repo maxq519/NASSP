@@ -52,6 +52,8 @@
 #include "iu.h"
 #include "Mission.h"
 
+#include "eva.h"
+
 #include <crtdbg.h>
 
 extern "C" {
@@ -444,6 +446,7 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	SuitCompressor2Switch(Panelsdk),
 	SuitCompressor1Feeder("Suit-Compressor-1-Feeder", Panelsdk),
 	SuitCompressor2Feeder("Suit-Compressor-2-Feeder", Panelsdk),
+	RunEVAFeeder("Run-EVA-Feeder", Panelsdk),
 	BatteryCharger("BatteryCharger", Panelsdk),
 	timedSounds(soundlib),
 	iuCommandConnector(agc, this),
@@ -680,6 +683,8 @@ void Saturn::initSaturn()
 
 	TLISoundsLoaded = false;
 	IUSCContPermanentEnabled = true;
+
+	cmpeva = false;
 
 	//
 	// Do we have the Skylab-type SM and CM?
@@ -1163,6 +1168,7 @@ void Saturn::initSaturn()
 	seatsunfoldedidx = -1;
 	coascdridx = -1;
 	coascdrreticleidx = -1;
+	smidx = -1;
 
 
 	yagiidx = -1;
@@ -1271,6 +1277,12 @@ void Saturn::initSaturn()
 		// Switch to compatible dock mode 
 		SetDockMode(0);
 	}
+
+	for (int i = 0;i < 8;i++)
+	{
+		runningLightsPos[i] = _V(0, 0, 0);
+	}
+
 	InitSaturnCalled = true;
 }
 
@@ -1648,6 +1660,8 @@ void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 		MoveFlashlight();
 	}
 
+	if (cmpeva)UpdateEVA(); //if cmp eva active (vessel created), enables EVA Timestep
+
 	sprintf(buffer, "End time(0) %lld", time(0)); 
 	TRACE(buffer);
 }
@@ -2013,6 +2027,10 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	if (pMission->IsJMission()) simbay.MappingCameraSaveState(scn);
 	if (pMission->GetPanel230Version() == 1) simbay.GammaBaySaveState(scn);
 	if (pMission->GetPanel230Version() == 1) simbay.MassSpectrometerSaveState(scn);
+	//Save EVA State in scn file
+	char buffer[100];
+	sprintf(buffer, "%d", cmpeva);
+	oapiWriteScenario_string(scn, "CMPEVA", buffer);
 }
 
 void Saturn::QuicksaveScenario()
@@ -2599,6 +2617,11 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	}
 	else if (!strnicmp(line, "PAYN", 4)) {
 		strncpy (PayloadName, line + 5, 64);
+	}
+	else if (!strnicmp(line, "CMPEVA", 6)) {
+		//Load EVA State from scn file
+		sscanf(line + 6, "%f", &ftcp);
+		cmpeva = ftcp;
 	}
 	else if (!strnicmp(line, FAILURES_START_STRING, sizeof(FAILURES_START_STRING))) {
 		Failures.LoadState(scn);
@@ -3717,9 +3740,9 @@ int Saturn::clbkConsumeDirectKey(char *kstate)
 	// Only override these keys if the user is holding no modifier keys, Alt only, or Ctrl + Alt.
 	if (GetAttitudeMode() == ATTITUDEMODE::ATTMODE_ROT && !(KEYMOD_CONTROL(kstate) && !KEYMOD_ALT(kstate)) && !KEYMOD_SHIFT(kstate)) {
 		// Possible deflection amounts are:
-		// No key modifiers: 10.5° (max proportional rate, but not hardover)
-		// Alt: 11.5° (full deflection, triggering direct switches)
-		// Ctrl + Alt: 1.51° (triggering breakout switches)
+		// No key modifiers: 10.5Â° (max proportional rate, but not hardover)
+		// Alt: 11.5Â° (full deflection, triggering direct switches)
+		// Ctrl + Alt: 1.51Â° (triggering breakout switches)
 		double deflectionDegrees = KEYMOD_ALT(kstate) ? KEYMOD_CONTROL(kstate) ? 1.51 : 11.5 : 10.5;
 		double deflectionPercent = deflectionDegrees / 11.5;
 
@@ -5306,6 +5329,13 @@ void Saturn::UpdateMassAndCoG()
 		//lights
 		SpotLight->UpdatePosition(CoGShift);
 		RndzLight->UpdatePosition(CoGShift);
+		EVALight->UpdatePosition(CoGShift);
+
+		//Running Lights
+		for (int i = 0;i < 8;i++)
+		{
+			runningLightsPos[i] -= CoGShift;
+		}
 
 		// All done!
 		LastFuelWeight = CurrentFuelWeight;
