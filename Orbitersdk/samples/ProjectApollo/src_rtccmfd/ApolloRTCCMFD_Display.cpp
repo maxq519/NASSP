@@ -6326,11 +6326,11 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			Text(skp, x + dx * i, y, "%.3lf", GC->rtcc->PZMCCDIS.data[i].AZ_min*DEG); y++;
 			Text(skp, x + dx * i, y, "%.3lf", GC->rtcc->PZMCCDIS.data[i].AZ_max*DEG); y++;
 			Text(skp, x + dx * i, y, "%.0lf", (GC->rtcc->PZMCCDIS.data[i].CSMWT + GC->rtcc->PZMCCDIS.data[i].LMWT) / 0.45359237); y++;
-			Text_GET_HHHMM(skp, x + dx * i, y, GC->rtcc->PZMCCDIS.data[i].GET_MCC); y++;
+			Text_GET_HHHMMSS(skp, x + dx * i, y, GC->rtcc->PZMCCDIS.data[i].GET_MCC); y++;
 			Text(skp, x + dx * i, y, "%.1lf", length(GC->rtcc->PZMCCDIS.data[i].DV_MCC) / 0.3048); y++;
 			Text(skp, x + dx * i, y, "%.3lf", GC->rtcc->PZMCCDIS.data[i].YAW_MCC*DEG); y++;
 			Text(skp, x + dx * i, y, "%.3lf", GC->rtcc->PZMCCDIS.data[i].h_PC / 1852.0); y++;
-			Text_GET_HHHMM(skp, x + dx * i, y, GC->rtcc->PZMCCDIS.data[i].GET_LOI); y++;
+			Text_GET_HHHMMSS(skp, x + dx * i, y, GC->rtcc->PZMCCDIS.data[i].GET_LOI); y++;
 			Text(skp, x + dx * i, y, "%.1lf", length(GC->rtcc->PZMCCDIS.data[i].DV_LOI) / 0.3048); y++;
 			Text(skp, x + dx * i, y, "%.3lf", GC->rtcc->PZMCCDIS.data[i].AZ_act*DEG); y++;
 			Text(skp, x + dx * i, y, "%.3lf", GC->rtcc->PZMCCDIS.data[i].incl_fr*DEG); y++;

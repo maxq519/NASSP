@@ -152,6 +152,17 @@ void Saturn::SystemsInit() {
 	ExteriorLighting.Init(this, &LightingRndzMNBCB, &RndzLightSwitch, &RunEVAFeeder, &RunEVALightSwitch, EVALight);
 
 	//
+	// Interior Lights
+	//
+
+	LeftFloodLights.Init(this, &LightingFloodMNACB, &FloodFixedSwitch, &FloodDimSwitch, &FloodRotarySwitch);
+	RightFloodLights.Init(this, &LightingFloodMNBCB, &InteriorLightsFloodFixedSwitch, &InteriorLightsFloodDimSwitch, &RightFloodRotarySwitch);
+	LEBFloodLights.Init(this, &LightingFloodMNACB, &Panel100FloodFixedSwitch, &Panel100FloodDimSwitch, &Panel100FloodRotarySwitch);
+
+	MNATunnelLights.Init(this, &LightingRndzMNACB, &TunnelLightSwitch);
+	MNBTunnelLights.Init(this, &LightingRndzMNBCB, &TunnelLightSwitch);
+
+	//
 	// EPS/Cryo devices
 	//
 
@@ -695,6 +706,7 @@ void Saturn::SystemsInit() {
 	CMRCSHeat[11] = (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSROLL12COIL");
 
 	SideHatch.Init(this, &HatchGearBoxSelector, &HatchActuatorHandleSelector, &HatchActuatorHandleSelectorOpen, &HatchVentValveRotary);
+	BPC.Init(this, &SideHatch);
 	ForwardHatch.Init(this, (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:FORWARDHATCHPIPE"), &PressEqualValve);
 
 	WaterController.Init(this, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:POTABLEH2OTANK"),
@@ -855,6 +867,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		CMRCS1.Timestep(simt, simdt);	// Must be after JoystickTimestep
 		CMRCS2.Timestep(simt, simdt);
 		SideHatch.Timestep(simdt);
+		BPC.Timestep(simdt);
 		ForwardHatch.Timestep(simdt);
 
 		//Telecom update is last so telemetry reflects the current state
@@ -1175,6 +1188,18 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 //------------------------------------------------------------------------------------
 // Various debug prints
 //------------------------------------------------------------------------------------
+
+//Lighting Debug Lines   
+	/*
+	//sprintf(oapiDebugString(), "LH Prim %.2f LH Sec %.2f RH Prim %.2f RH Sec %.2f LEB Prim %.2f LEB Sec %.2f", LeftFloodLights.GetPrimOutput(), LeftFloodLights.GetSecOutput(),
+		//RightFloodLights.GetPrimOutput(), RightFloodLights.GetSecOutput(), LEBFloodLights.GetPrimOutput(), LEBFloodLights.GetSecOutput());
+
+	//sprintf(oapiDebugString(), "LH Prim %.2f LH Sec %.2f RH Prim %.2f RH Sec %.2f LEB Prim %.2f LEB Sec %.2f", LeftFloodLights.GetPrimVoltage(), LeftFloodLights.GetSecVoltage(),
+		//RightFloodLights.GetPrimVoltage(), RightFloodLights.GetSecVoltage(), LEBFloodLights.GetPrimVoltage(), LEBFloodLights.GetSecVoltage());
+
+	//sprintf(oapiDebugString(), "LH %.2f RH %.2f LEB %.2f", LeftFloodLights.GetCombinedOutput(), RightFloodLights.GetCombinedOutput(), LEBFloodLights.GetCombinedOutput());
+	 */
+
 //Scaling Debug Lines
 	/*
 	//double *pressCO2 = (double *)Panelsdk.GetPointerByString("HYDRAULIC:SUIT:CO2_PPRESS");
@@ -1184,7 +1209,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	//sprintf(oapiDebugString(), "Pixel %.2f MeterValue: %.2f XducerV %.2f", (129 - (O2Pressure1Meter.QueryValue()) * 20.6), O2Pressure1Meter.QueryValue(), O2Tank1PressSensor.Voltage());
 	*/
 
-	// Structure Temperature Debug Lines
+// Structure Temperature Debug Lines
 	/*
 	h_Radiator *DockProbe = (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:DOCKPROBE");
 	double *DockProbeTemp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:DOCKPROBE:TEMP");
@@ -1894,6 +1919,11 @@ void Saturn::SystemsInternalTimestep(double simdt)
 		simbay.SystemTimestep(tFactor);
 		hf_antenna_1.SystemTimestep(tFactor);
 		hf_antenna_2.SystemTimestep(tFactor);
+		LeftFloodLights.SystemTimestep(tFactor);
+		RightFloodLights.SystemTimestep(tFactor);
+		LEBFloodLights.SystemTimestep(tFactor);
+		MNATunnelLights.SystemTimestep(tFactor);
+		MNBTunnelLights.SystemTimestep(tFactor);
 
 		simdt -= tFactor;
 		tFactor = __min(mintFactor, simdt);

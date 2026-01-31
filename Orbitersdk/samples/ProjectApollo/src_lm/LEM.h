@@ -105,6 +105,8 @@ typedef struct {
 	int cdrStatus;	//0 = cabin, 1 = suit, 2 = EVA, 3 = PLSS
 	int lmpStatus;
 	double UCTAStatus;
+	std::string cdrName;
+	std::string lmpName;
 } LEMECSStatus;
 
 // Systems things
@@ -553,6 +555,7 @@ public:
 	void StopSeparationPyros();
 
 	void SetAnimations(double);
+	void UpdatePointingArrow();
 
 	//
 	// VISHANDLE
@@ -699,6 +702,9 @@ public:
 	// Custom quicksave behaviour
 	void QuicksaveScenario();
 
+	// Hide or Show mesh group
+	void HideMeshGroup(int, int, bool);
+
 protected:
 
 	//
@@ -748,7 +754,8 @@ protected:
 	void SetCompLight(int m, bool state);
 	void SetContactLight(int m, bool state);
 	void SetPowerFailureLight(int m, bool state);
-	void SetStageSeqRelayLight(int m, bool state);
+
+	void DoMeshAnimation(AnimState &, UINT &, double, double);
 
 	void ToggleSpaceEVA();
 
@@ -1728,6 +1735,7 @@ protected:
 	UINT vcidx;
 	UINT windowshadesidx;
 	UINT xpointershadesidx;
+	UINT hLMPointingArrowidx;
 
 	DEVMESHHANDLE probes;
 	DEVMESHHANDLE deflectors;
@@ -1805,6 +1813,14 @@ protected:
 	double vcFreeCamz;
 	double vcFreeCamSpeed;
 	double vcFreeCamMaxOffset;
+
+	//
+	// AOT ReticleKnob
+	//
+	UINT AOT_ReticleKnobAnimTrans;
+	AnimState AOT_ReticleKnobState;
+	UINT AOT_ReticleKnobAnimRot;
+	AnimState AOT_ReticleKnobRotState;
 
 	//
 	// Failures.
@@ -2159,6 +2175,7 @@ extern MESHHANDLE hLMDescent;
 extern MESHHANDLE hLMDescentNoLeg;
 extern MESHHANDLE hLMAscent;
 extern MESHHANDLE hLMVC;
+extern MESHHANDLE hLMPointingArrow;
 
 extern void LEMLoadMeshes();
 

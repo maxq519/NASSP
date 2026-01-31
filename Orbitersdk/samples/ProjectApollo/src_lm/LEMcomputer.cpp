@@ -49,11 +49,8 @@ LEMcomputer::LEMcomputer(SoundLib &s, DSKY &display, IMU &im, CDU &sc, CDU &tc, 
 
 	isLGC = true;
 
-	/* FIXME LOAD FILE SHOULD BE SET IN SCENARIO */
-	//InitVirtualAGC("Config/ProjectApollo/Luminary099.bin");
-
-	/* FIXME REMOVE THIS LATER, THIS IS TEMPORARY FOR TESTING ONLY AND SHOULD BE IN THE SCENARIO LATER */
-	/* LM PAD LOAD FOR LUMINARY 099 AND APOLLO 11  - OFFICIAL VERSION */
+	ThrustOnDelay = 30; // 0.019 seconds in units of 1/1600 seconds
+	ThrustOffDelay = 24; // 0.015 seconds in units of 1/1600 seconds
 
 	Start();
 }
@@ -86,8 +83,11 @@ void LEMcomputer::agcTimestep(double simt, double simdt)
 	if (LastCycled == 0) {					// Use simdt as difference if new run
 		LastCycled = (simt - simdt);
 		lem->PCM.last_update = LastCycled;
+		LastRCSTime = LastCycled;
 	}
 	double ThisTime = LastCycled;			// Save here
+
+	InitRCSActivity();
 
 	long cycles = (long)((simt - LastCycled) / 0.00001171875);	// Get number of CPU cycles to do
 	LastCycled += (0.00001171875 * cycles);						// Preserve the remainder
@@ -98,8 +98,15 @@ void LEMcomputer::agcTimestep(double simt, double simdt)
 		if ((ThisTime - lem->PCM.last_update) > 0.00015625) {	// If a step is needed
 			lem->PCM.Timestep(ThisTime);						// do it
 		}
+		if (ThisTime - LastRCSTime > 6.25e-04) // 1/1600 second
+		{
+			MonitorRCSActivity();
+			LastRCSTime = ThisTime;
+		}
 		x++;
 	}
+
+	CalculateRCSDutyCycle();
 }
 
 void LEMcomputer::Run ()
@@ -178,7 +185,7 @@ void LEMcomputer::Timestep(double simt, double simdt)
 			lem->PCM.last_update = simt - simdt;
 		}
 		lem->PCM.Timestep(simt);
-
+		ResetRCSDutyCycle();
 		// and do nothing more.
 		return;
 	}
@@ -261,14 +268,14 @@ void LEMcomputer::ProcessChannel13(ChannelValue val){
 
 void LEMcomputer::ProcessChannel5(ChannelValue val){
 	// This is now handled inside the ATCA
-	LEM *lem = (LEM *) OurVessel;	
-	lem->atca.ProcessLGC(5,val.to_ulong());
+	//LEM *lem = (LEM *) OurVessel;	
+	//lem->atca.ProcessLGC(5,val.to_ulong());
 }
 
 void LEMcomputer::ProcessChannel6(ChannelValue val){
 	// This is now handled inside the ATCA
-	LEM *lem = (LEM *) OurVessel;	
-	lem->atca.ProcessLGC(6,val.to_ulong());
+	//LEM *lem = (LEM *) OurVessel;	
+	//lem->atca.ProcessLGC(6,val.to_ulong());
 }
 
 void LEMcomputer::ProcessChannel142(ChannelValue val) {
@@ -473,7 +480,7 @@ void LMOptics::SystemTimestep(double simdt) {
 	}
 }
 
-bool LMOptics::PaintReticleAngle(SURFHANDLE surf, SURFHANDLE digits) {
+bool LMOptics::PaintReticleAngle(SURFHANDLE surf, SURFHANDLE digits, int TexMul) {
 	int beta, srx, sry, digit[4];
 	int x = (int)((-OpticsReticle)*100.0*DEG);
 	if (x < 0) { x += 36000; }
@@ -485,20 +492,20 @@ bool LMOptics::PaintReticleAngle(SURFHANDLE surf, SURFHANDLE digits) {
 	digit[3] = x / 10000;
 	sry = (int)((beta * 1.2) *z);
 	srx = (8 *z) + ((digit[3] * 25) *z);
-	oapiBlt(surf, digits, 0, 0, srx, 33 *z, 9 *z, 12 *z, SURF_PREDEF_CK);
+	oapiBlt(surf, digits, 0, 0, srx * TexMul, 33 *z * TexMul, 9 *z * TexMul, 12 *z * TexMul, SURF_PREDEF_CK);
 	srx = (8 *z) + ((digit[2] * 25) *z);
-	oapiBlt(surf, digits, 10 *z, 0, srx, 33 *z, 9 *z, 12 *z, SURF_PREDEF_CK);
+	oapiBlt(surf, digits, 10 *z * TexMul, 0, srx * TexMul, 33 *z * TexMul, 9 *z * TexMul, 12 *z * TexMul, SURF_PREDEF_CK);
 	srx = (8 *z) + ((digit[1] * 25) *z);
-	oapiBlt(surf, digits, 20 *z, 0, srx, 33 *z, 9 *z, 12 *z, SURF_PREDEF_CK);
+	oapiBlt(surf, digits, 20 *z * TexMul, 0, srx * TexMul, 33 *z * TexMul, 9 *z * TexMul, 12 *z * TexMul, SURF_PREDEF_CK);
 	srx = (8 *z) + ((digit[0] * 25) *z);
 	if (beta == 0) {
-		oapiBlt(surf, digits, 30 *z, 0, srx, 33 *z, 9 *z, 12 *z, SURF_PREDEF_CK);
+		oapiBlt(surf, digits, 30 *z * TexMul, 0, srx * TexMul, 33 *z * TexMul, 9 *z * TexMul, 12 *z * TexMul, SURF_PREDEF_CK);
 	}
 	else {
-		oapiBlt(surf, digits, 30 *z, sry, srx, 33 *z, 9 *z, (12 *z) - sry, SURF_PREDEF_CK);
+		oapiBlt(surf, digits, 30 *z * TexMul, sry * TexMul, srx * TexMul, 33 *z * TexMul, 9 *z * TexMul, (12 *z * TexMul) - sry * TexMul, SURF_PREDEF_CK);
 		if (digit[0] == 9) digit[0] = 0; else digit[0]++;
 		srx = (8 *z) + ((digit[0] * 25) *z);
-		oapiBlt(surf, digits, 30 *z, 0, srx, (45 *z) - sry, 9 *z, sry, SURF_PREDEF_CK);
+		oapiBlt(surf, digits, 30 *z * TexMul, 0, srx * TexMul, (45 *z * TexMul) - sry * TexMul, 9 *z * TexMul, sry * TexMul, SURF_PREDEF_CK);
 	}
 	return true;
 }

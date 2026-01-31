@@ -47,6 +47,7 @@
 
 #include "connector.h"
 #include "nassputils.h"
+#include "LM_VC_Resource.h"
 
 using namespace nassp;
 
@@ -624,6 +625,7 @@ void LEM::Init()
 	vcidx = -1;
 	windowshadesidx = -1;
 	xpointershadesidx = -1;
+	hLMPointingArrowidx = -1;
 
 	drogue = NULL;
 	probes = NULL;
@@ -953,6 +955,10 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 			case OAPI_KEY_NUMPAD0:
 				dskyKeyChanged = &DskySwitchZero;
 				break;
+			case OAPI_KEY_K:
+				//kill rotation
+				SetAngularVel(_V(0, 0, 0));
+				break;
 		}
 
 		// Direction-specific code, handle DSKY key presses if any.
@@ -1025,6 +1031,9 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 			case OAPI_KEY_NUMPAD0:
 				dedaKeyChanged = &DedaSwitchZero;
 				break;
+			case OAPI_KEY_S:
+				if (down) { QuicksaveScenario(); }
+				break;
 			case OAPI_KEY_D:
 				// Orbiter undocking messes with our undocking system. We consume the keybind here to block it.
 				// This won't work if the user has changed this keybind. Unfortunately Orbiter does not export the keymap through the API (yet). :(
@@ -1044,18 +1053,6 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 				// Doing SwitchTo instead of SetState prevents a second click on key up.
 				dedaKeyChanged->SetHeld(false);
 				dedaKeyChanged->SwitchTo(PUSHBUTTON_UNPUSHED);
-			}
-		}
-		return 0;
-	}
-
-	if (!KEYMOD_SHIFT(keystate) && KEYMOD_CONTROL(keystate) && KEYMOD_ALT(keystate))
-	{
-		if (down) {
-			switch (key) {
-			case OAPI_KEY_S:
-				QuicksaveScenario();
-				break;
 			}
 		}
 		return 0;
@@ -1332,11 +1329,23 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 	return 0;
 }
 
+void LEM::DoMeshAnimation(AnimState &state, UINT &anim, double speed, double simdt)
+{
+	if (state.Moving()) {
+		state.Move(simdt / speed);
+		SetAnimation(anim, state.pos);
+	}
+}
+
 void LEM::SetAnimations(double simdt) {
 	//
 	//EVA Antenna
 	//
 	VHF.SetAnimation(EvaAntennaHandle.GetAnimState());
+
+	if (AOTReticleDetent.GetState() == 0) AOT_ReticleKnobState.action = AnimState::CLOSING;
+	else AOT_ReticleKnobState.action = AnimState::OPENING;
+	DoMeshAnimation(AOT_ReticleKnobState, AOT_ReticleKnobAnimTrans, 0.1, simdt);
 }
 
 //
@@ -2140,6 +2149,22 @@ void LEM::clbkVisualCreated(VISHANDLE vis, int refcount)
 	if (vcidx != -1) {
 		vcmesh = GetDevMesh(vis, vcidx);
 		SetCOAS();
+	}
+
+	// This is Mission Specific code to change for now only the Panel 14 DC FEEDER text.
+	// First hide all the texts
+	HideMeshGroup(vcidx, VC_GRP_Panel12_16_DC_FEEDER_FAULT, true);
+	HideMeshGroup(vcidx, VC_GRP_Panel12_16_DC_FEEDER_FAULT_2, true);
+	HideMeshGroup(vcidx, VC_GRP_Panel12_16_DC_BUS_FAULT, true);
+
+	if (pMission->GetLMNumber() < 6) {												// up to Apollo 11
+		HideMeshGroup(vcidx, VC_GRP_Panel12_16_DC_BUS_FAULT, false);
+	}
+	else if (pMission->GetLMNumber() > 5 && (pMission->GetLMNumber() < 9)) {		// Apollo 12 to 14
+		HideMeshGroup(vcidx, VC_GRP_Panel12_16_DC_FEEDER_FAULT, false);
+	}
+	else {
+		HideMeshGroup(vcidx, VC_GRP_Panel12_16_DC_FEEDER_FAULT_2, false);			// Apollo 15 to 17
 	}
 }
 
