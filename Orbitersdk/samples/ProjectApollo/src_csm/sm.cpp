@@ -52,10 +52,7 @@ MESHHANDLE hSMPanel5;
 MESHHANDLE hSMPanel6;
 MESHHANDLE hSMhga;
 MESHHANDLE hSMCRYO;
-MESHHANDLE hSMSIMBAY1;
-MESHHANDLE hSMSIMBAY2;
-MESHHANDLE hYAGI;
-MESHHANDLE hDIPOLEBOXES;
+MESHHANDLE hSMSIMBAY;
 
 
 #define LOAD_MESH(var, name) var = oapiLoadMeshGlobal(name);
@@ -79,10 +76,7 @@ void SMLoadMeshes()
 	LOAD_MESH(hSMPanel6, "ProjectApollo/SM-Panel6");
 	LOAD_MESH(hSMhga, "ProjectApollo/SM-HGA");
 	LOAD_MESH(hSMCRYO, "ProjectApollo/SM-CRYO");
-	LOAD_MESH(hSMSIMBAY1, "ProjectApollo/SM-SIMBAY1");
-	LOAD_MESH(hSMSIMBAY2, "ProjectApollo/SM-SIMBAY2");
-	LOAD_MESH(hYAGI, "ProjectApollo/Yagi");
-	LOAD_MESH(hDIPOLEBOXES, "ProjectApollo/SM-DipoleBoxes");
+	LOAD_MESH(hSMSIMBAY, "ProjectApollo/SM-SIMBAY");
 }
 
 SM::SM (OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)
@@ -144,8 +138,6 @@ void SM::InitSM()
 	showCRYO = true;
 	showRCS = true;
 	showSIMBay = false;
-	showYagi = false;
-	SIMBayVersion = 0;
 
 	showPanel1 = true;
 	showPanel2 = true;
@@ -260,30 +252,7 @@ void SM::SetSM()
 		AddMesh (hSMCRYO, &mesh_dir);
 
 	if (showSIMBay)
-	{
-		if (SIMBayVersion == 1)
-		{
-			AddMesh(hSMSIMBAY1, &mesh_dir);
-		}
-		else if (SIMBayVersion == 2)
-		{
-			AddMesh(hSMSIMBAY2, &mesh_dir);
-		}
-	}
-
-	///If showYagi == true, add Yagi and Dipole Boxes meshes
-	if (showYagi)
-	{
-		mesh_dir = _V(0, 0, -1.27914);
-		AddMesh(hYAGI, &mesh_dir);
-	}
-
-	if (showYagi)
-	{
-		mesh_dir = _V(0, 0, -1.42914);
-		AddMesh(hDIPOLEBOXES, &mesh_dir);
-	}
-	///////////////////////////////////////////////////////////
+		AddMesh(hSMSIMBAY, &mesh_dir);
 
 	if (showSPS) 
 	{
@@ -880,8 +849,6 @@ typedef union {
 		unsigned int SMBusAPowered : 1;
 		unsigned int SMBusBPowered : 1;
 		unsigned int showSIMBay : 1;
-		unsigned int showYagi : 1;
-		unsigned int SIMBayVersion : 1;
 	} u;
 	unsigned long word;
 } MainState;
@@ -907,8 +874,6 @@ int SM::GetMainState()
 	state.u.SMBusAPowered = SMBusAPowered;
 	state.u.SMBusBPowered = SMBusBPowered;
 	state.u.showSIMBay = showSIMBay;
-	state.u.showYagi = showYagi;
-	state.u.SIMBayVersion = SIMBayVersion;
 
 	return state.word;
 }
@@ -1135,8 +1100,6 @@ void SM::SetMainState(int s)
 	A13Exploded = (state.u.A13Exploded != 0);
 	SMBusAPowered = (state.u.SMBusAPowered != 0);
 	SMBusBPowered = (state.u.SMBusBPowered != 0);
-	showYagi = (state.u.showYagi != 0);
-	SIMBayVersion = (state.u.showYagi != 0);
 }
 
 void SM::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
@@ -1250,14 +1213,6 @@ void SM::SetState(SMSettings &state)
 		VehicleNo = state.VehicleNo;
 		showHGA = state.showHGA;
 		A13Exploded = state.A13Exploded;
-		MissionNo = state.MissionNo;
-		SIMBayVersion = state.SIMBayVersion;
-
-		if (SIMBayVersion == 2)
-		{
-			showYagi = true;
-		}
-
 		if (state.SIMBayPanelJett)
 		{
 			showSIMBay = true;
