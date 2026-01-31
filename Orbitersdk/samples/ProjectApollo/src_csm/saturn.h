@@ -1342,6 +1342,8 @@ public:
 
 	void UpdateEVA(void);
 
+	virtual void StopEVA();
+
 	OBJHANDLE hCMPEVA;
 
 	int cmpeva; //CMP EVA Started or not

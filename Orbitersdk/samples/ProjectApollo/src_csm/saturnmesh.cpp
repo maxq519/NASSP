@@ -2298,15 +2298,33 @@ void Saturn::ToggleCMPEVA()
 
 	EVA* eva = (EVA*)oapiGetVesselInterface(hCMPEVA);
 
-	EVASettings evas;
+	EVASettingsCMP evascmp;
 
-	evas.MissionNo = ApolloNo;
-	eva->SetEVAStats(evas);
+	evascmp.MissionNo = ApolloNo;
+	evascmp.isCMP = true;
+	strcpy(evascmp.CSMName, GetName());
+	eva->SetEVAStatsCMP(evascmp);
 
 	oapiSetFocusObject(hCMPEVA);
 }
 
 void Saturn::UpdateEVA()
+{
+	if (cmpeva)
+	{
+		char VName[256] = "";
+		strcpy(VName, pMission->GetCMPName().c_str());
+		hCMPEVA = oapiGetObjectByName(VName);
+
+		if (hCMPEVA == NULL)
+		{
+			cmpeva = false;
+			SetCrewNumber(3);
+		}
+	}
+}
+
+void Saturn::StopEVA()
 {
 	VECTOR3 gpos;
 	VECTOR3 ghatch;
@@ -2321,22 +2339,14 @@ void Saturn::UpdateEVA()
 		strcpy(VName, pMission->GetCMPName().c_str());
 		hCMPEVA = oapiGetObjectByName(VName);
 
-		if (hCMPEVA == NULL)
+		oapiGetGlobalPos(hCMPEVA, &gpos);
+		double distance = dist(gpos, ghatch);
+
+		if (distance < 0.4)
 		{
 			cmpeva = false;
 			SetCrewNumber(3);
-		}
-		else
-		{
-			oapiGetGlobalPos(hCMPEVA, &gpos);
-			double distance = dist(gpos, ghatch);
-
-			if (distance < 0.4)
-			{
-				cmpeva = false;
-				SetCrewNumber(3);
-				oapiDeleteVessel(hCMPEVA);
-			}
+			oapiDeleteVessel(hCMPEVA);
 		}
 	}
 }

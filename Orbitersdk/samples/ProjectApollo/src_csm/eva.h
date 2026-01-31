@@ -22,14 +22,23 @@
 
   **************************************************************************/
 
-class Saturn;
+
+
+typedef struct {
+
+	int MissionNo;			///< Apollo mission number.
+	bool isCMP;				///< Flag for CMP vs. LMP.
+	char CSMName[256];		///< CSM Name
+
+} EVASettingsCMP;
 
 typedef struct {
 
 	int MissionNo;			///< Apollo mission number.
 	bool isLMP;				///< Flag for CMP vs. LMP.
+	char LEMName[256];		///< LM Name
 
-} EVASettings;
+} EVASettingsLMP;
 
 class EVA : public VESSEL3 {
 public:
@@ -42,7 +51,8 @@ public:
 	void clbkSetClassCaps(FILEHANDLE cfg);
 	void SetAstroStage();
 	void clbkPostCreation();
-	virtual void SetEVAStats(EVASettings &evas);
+	virtual void SetEVAStatsCMP(EVASettingsCMP &evascmp);
+	virtual void SetEVAStatsLMP(EVASettingsLMP &evaslmp);
 	void DoFirstTimestep();
 	void SetMainState(int s);
 	int GetMainState();
@@ -50,7 +60,8 @@ public:
 	void clbkSaveState(FILEHANDLE scn);
 
 private:
-	void ScanMotherShip();
+	void GetCSM();
+	void GetLEM();
 
 	THRUSTER_HANDLE th_rcs[16], th_group[2];
 	PROPELLANT_HANDLE hProp;
@@ -58,11 +69,19 @@ private:
 
 protected:
 	int ApolloNo;
-	OBJHANDLE hMaster;
-	bool GoDock1;
+	OBJHANDLE hCSM;
+	OBJHANDLE hLEM;
+	bool GoDockCSM;
+	bool GoDockLEM;
 	bool MotherShip;
 	char CSMName[256];
+	char LEMName[256];
 	bool FirstTimestep;
-	bool StateSet;
+	bool StateSetCMP;
+	bool StateSetLMP;
+	bool isCMP;
 	bool isLMP;
+	bool Astro;
+	bool CSMMotherShip;
+	bool LEMMotherShip;
 };

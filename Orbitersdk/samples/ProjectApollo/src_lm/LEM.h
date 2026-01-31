@@ -617,6 +617,7 @@ public:
 	virtual void AEAPadLoad(unsigned int address, unsigned int value);
 	virtual void StopEVA(bool isCDR);
 	virtual bool IsForwardHatchOpen() { return ForwardHatch.IsOpen(); }
+	virtual void StopSpaceEVA();
 
 	char *getOtherVesselName() { return agc.OtherVesselName;};
 	APSPropellantSource *GetAPSPropellant() { return &APSPropellant; };

@@ -31,12 +31,17 @@
 #include "stdio.h"
 #include "math.h"
 
+#include "connector.h"
+#include "csmconnector.h"
+#include "lemconnector.h"
+
 #include "nasspsound.h"
 #include "nasspdefs.h"
 #include "soundlib.h"
 
 #include "toggleswitch.h"
 #include "saturn.h"
+#include "LEM.h"
 
 #include "eva.h"
 #include "tracer.h"
@@ -47,7 +52,7 @@ char trace_file[] = "ProjectApollo CMP_EVA.log";
 const double MAIN_ISP = 500;
 const double RCS_TH = 4;
 const double FUEL_MASS = 30;
-const double EMP_MASS = 100;
+const double EMP_MASS = 115;
 
 double stiffness = 1e3;
 double damping = 2e2;
@@ -70,23 +75,45 @@ EVA::~EVA()
 void EVA::init()
 
 {
+	hCSM = NULL;
+	hLEM = NULL;
+	GoDockCSM = false;
+	GoDockLEM = false;
 	FirstTimestep = true;
-	StateSet = false;
+	StateSetCMP = false;
+	StateSetLMP = false;
 	ApolloNo = 0;
+	Astro = true;
+	isCMP = false;
 	isLMP = false;
+	CSMMotherShip = false;
+	LEMMotherShip = false;
+	CSMName[0] = 0;
+	LEMName[0] = 0;
+
 }
 
-void EVA::SetEVAStats(EVASettings& evas)
+void EVA::SetEVAStatsCMP(EVASettingsCMP& evascmp)
 
 {
-	ApolloNo = evas.MissionNo;
-	StateSet = true;
-	isLMP = evas.isLMP;
+	ApolloNo = evascmp.MissionNo;
+	isCMP = evascmp.isCMP;
+	strcpy(CSMName, evascmp.CSMName);
+	StateSetCMP = true;
+}
+
+void EVA::SetEVAStatsLMP(EVASettingsLMP& evaslmp)
+
+{
+	ApolloNo = evaslmp.MissionNo;
+	isLMP = evaslmp.isLMP;
+	strcpy(LEMName, evaslmp.LEMName);
+	StateSetLMP = true;
 }
 
 void EVA::DoFirstTimestep()
 {
-	if (StateSet)
+	if (StateSetCMP || StateSetLMP)
 	{
 
 		VECTOR3 mesh_dir = _V(0, 0, 0);
@@ -97,7 +124,7 @@ void EVA::DoFirstTimestep()
 			{
 				AddMesh("ProjectApollo/LM-LMPEVA-9", &mesh_dir);
 			}
-			else
+			else if (isCMP)
 			{
 				AddMesh("ProjectApollo/CM-CMPEVA-9", &mesh_dir);
 			}
@@ -113,7 +140,9 @@ void EVA::DoFirstTimestep()
 
 typedef union {
 	struct {
-		unsigned int StateSet : 1;
+		unsigned int StateSetCMP : 1;
+		unsigned int StateSetLMP : 1;
+		unsigned int isCMP : 1;
 		unsigned int isLMP : 1;
 	} u;
 	unsigned int word;
@@ -125,7 +154,9 @@ int EVA::GetMainState()
 	MainEVAState s;
 
 	s.word = 0;
-	s.u.StateSet = StateSet;
+	s.u.StateSetCMP = StateSetCMP;
+	s.u.StateSetLMP = StateSetLMP;
+	s.u.isCMP = isCMP;
 	s.u.isLMP = isLMP;
 
 	return s.word;
@@ -137,7 +168,9 @@ void EVA::SetMainState(int n)
 	MainEVAState s;
 
 	s.word = n;
-	StateSet = (s.u.StateSet != 0);
+	StateSetCMP = (s.u.StateSetCMP != 0);
+	StateSetLMP = (s.u.StateSetLMP != 0);
+	isCMP = (s.u.isCMP != 0);
 	isLMP = (s.u.isLMP != 0);
 }
 
@@ -231,6 +264,8 @@ void EVA::SetAstroStage()
 	th_group[0] = th_rcs[2];
 	th_group[1] = th_rcs[6];
 	CreateThrusterGroup(th_group, 2, THGROUP_ATT_RIGHT);
+
+	Astro = true;
 }
 
 DLLCLBK VESSEL* ovcInit(OBJHANDLE hvessel, int flightmodel)
@@ -245,6 +280,44 @@ DLLCLBK void ovcExit(VESSEL* vessel)
 
 void EVA::clbkPostCreation()
 {
+}
+
+void EVA::GetCSM()
+{
+	double VessCount;
+	int i = 0;
+
+	VessCount = oapiGetVesselCount();
+	for (i = 0; i < VessCount; i++)
+	{
+		char vesselName[256] = "";
+		hCSM = oapiGetVesselByIndex(i);
+		oapiGetObjectName(hCSM, vesselName, 256);
+
+		if (strcmp(CSMName, vesselName) == 0) {
+			CSMMotherShip = true;
+			i = int(VessCount);
+		}
+	}
+}
+
+void EVA::GetLEM()
+{
+	double VessCount;
+	int i = 0;
+
+	VessCount = oapiGetVesselCount();
+	for (i = 0; i < VessCount; i++)
+	{
+		char vesselName[256] = "";
+		hLEM = oapiGetVesselByIndex(i);
+		oapiGetObjectName(hLEM, vesselName, 256);
+
+		if (stricmp(LEMName, vesselName) == 0) {
+			LEMMotherShip = true;
+			i = int(VessCount);
+		}
+	}
 }
 
 int EVA::clbkConsumeBufferedKey(DWORD key, bool down, char* kstate)
@@ -264,13 +337,20 @@ int EVA::clbkConsumeBufferedKey(DWORD key, bool down, char* kstate)
 
 	if (KEYMOD_ALT(kstate))
 	{
-		if (down) {
-			switch (key) {
-			case OAPI_KEY_E:
-				return 1;
+		return 0;
+	}
+
+	if (key == OAPI_KEY_E && down == true) {
+		if (Astro) 
+		{
+			if (isCMP) {
+				GoDockCSM = true;
+			}
+			if (isLMP) {
+				GoDockLEM = true;
 			}
 		}
-		return 0;
+		return 1;
 	}
 
 	return 0;
@@ -283,6 +363,27 @@ void EVA::clbkPreStep(double SimT, double SimDT, double MJD)
 		DoFirstTimestep();
 		return;
 	}
+
+	if (!CSMMotherShip && isCMP) GetCSM();
+	if (!LEMMotherShip && isLMP) GetLEM();
+
+	// Finish EVA CSM
+	if (CSMMotherShip && hCSM && GoDockCSM)
+	{
+		Saturn* csmvessel = (Saturn*)oapiGetVesselInterface(hCSM);
+		if (csmvessel)
+		csmvessel->StopEVA();
+		GoDockCSM = false;
+	}
+
+	// Finish EVA LM
+	if (LEMMotherShip && hLEM && GoDockLEM)
+	{
+		LEM* lemvessel = (LEM*)oapiGetVesselInterface(hLEM);
+		if (lemvessel)
+		lemvessel->StopSpaceEVA();
+		GoDockLEM = false;
+	}
 }
 
 void EVA::clbkLoadStateEx(FILEHANDLE scn, void* vs)
@@ -291,7 +392,13 @@ void EVA::clbkLoadStateEx(FILEHANDLE scn, void* vs)
 
 	while (oapiReadScenario_nextline(scn, line)) 
 	{
-		if (!strnicmp(line, "MISSIONNO", 9)) {
+		if (!strnicmp(line, "CSMNAME", 7)) {
+			sscanf(line + 7, "%s", &CSMName);
+		}
+		else if (!strnicmp(line, "LEMNAME", 7)) {
+			sscanf(line + 7, "%s", &LEMName);
+		}
+		else if (!strnicmp(line, "MISSIONNO", 9)) {
 			sscanf(line + 9, "%d", &ApolloNo);
 	    }
 		else if (!strnicmp(line, "STATE", 5)) {
@@ -313,6 +420,10 @@ void EVA::clbkSaveState(FILEHANDLE scn)
 	if (s) {
 		oapiWriteScenario_int(scn, "STATE", s);
 	}
+
+	oapiWriteScenario_string(scn, "CSMNAME", CSMName);
+
+	oapiWriteScenario_string(scn, "LEMNAME", LEMName);
 
 	if (ApolloNo != 0) {
 		oapiWriteScenario_int(scn, "MISSIONNO", ApolloNo);

@@ -917,23 +917,18 @@ void LEM::ToggleSpaceEVA()
 
 	EVA* eva = (EVA*)oapiGetVesselInterface(hSPACEEVA);
 
-	EVASettings evas;
+	EVASettingsLMP evaslmp;
 
-	evas.MissionNo = ApolloNo;
-	evas.isLMP = true;
-	eva->SetEVAStats(evas);
+	evaslmp.MissionNo = ApolloNo;
+	evaslmp.isLMP = true;
+	strcpy(evaslmp.LEMName, GetName());
+	eva->SetEVAStatsLMP(evaslmp);
 
 	oapiSetFocusObject(hSPACEEVA);
 }
 
 void LEM::UpdateSpaceEVA()
 {
-	VECTOR3 gpos;
-	VECTOR3 ghatch;
-    ghatch = { 0, 0.685402, 0.725127 };
-
-	Local2Global(ghatch - currentCoG, ghatch);
-
 	if (spaceeva)
 	{
 		char VName[256] = "";
@@ -944,16 +939,30 @@ void LEM::UpdateSpaceEVA()
 		{
 			spaceeva = false;
 		}
-		else
-		{
-			oapiGetGlobalPos(hSPACEEVA, &gpos);
-			double distance = dist(gpos, ghatch);
+	}
+}
 
-			if (distance < 0.4)
-			{
-				spaceeva = false;
-				oapiDeleteVessel(hSPACEEVA);
-			}
+void LEM::StopSpaceEVA()
+{
+	VECTOR3 gpos;
+	VECTOR3 ghatch;
+	ghatch = { 0, 0.685402, 1.28703 };
+
+	Local2Global(ghatch - currentCoG, ghatch);
+
+	if (spaceeva)
+	{
+		char VName[256] = "";
+		strcpy(VName, pMission->GetLMPName().c_str());
+		hSPACEEVA = oapiGetObjectByName(VName);
+
+		oapiGetGlobalPos(hSPACEEVA, &gpos);
+		double distance = dist(gpos, ghatch);
+
+		if (distance < 0.4)
+		{
+			spaceeva = false;
+			oapiDeleteVessel(hSPACEEVA);
 		}
 	}
 }

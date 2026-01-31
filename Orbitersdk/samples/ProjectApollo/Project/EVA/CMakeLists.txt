@@ -3,6 +3,7 @@ project(EVA)
 set(INCLUDE_DIRS
     ${NASSP_SOURCE_ROOT}/src_aux
     ${NASSP_SOURCE_ROOT}/src_csm
+    ${NASSP_SOURCE_ROOT}/src_lm
     ${NASSP_SOURCE_ROOT}/src_mfd
     ${NASSP_SOURCE_ROOT}/src_saturn
     ${NASSP_SOURCE_ROOT}/src_sys
