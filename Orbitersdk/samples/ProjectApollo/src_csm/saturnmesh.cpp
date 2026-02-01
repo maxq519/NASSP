@@ -48,6 +48,8 @@
 #include "Mission.h"
 #include "SIMBay.h"
 
+#include "eva.h"
+
 MESHHANDLE hSM;
 MESHHANDLE hSMRCS;
 MESHHANDLE hSMRCSLow;
@@ -2431,6 +2433,80 @@ void Saturn::AddCMMeshes(const VECTOR3 &mesh_dir)
 
 	//Reload cue cards, if required
 	CueCards.ResetCueCards();
+}
+
+void Saturn::ToggleCMPEVA()
+{
+	ECSStatus ecs;
+	GetECSStatus(ecs);
+	if (ecs.crewNumber < 3) return;
+	if (cmpeva) return;
+
+	SetCrewNumber(2);
+
+	VESSELSTATUS vs1;
+	GetStatus(vs1);
+
+	char VName[256] = "";
+	strcpy(VName, pMission->GetCMPName().c_str());
+
+	VECTOR3 ofs;
+	if (stage == STAGE_ORBIT_SIVB) ofs = { 0, 1.10678, 13.15 + 2.227 };
+	else if (stage == CSM_LEM_STAGE) ofs = { 0, 1.10678, 2.23204 };
+
+	Local2Rel(ofs - currentCoG, vs1.rpos);
+
+	vs1.eng_main = vs1.eng_hovr = 0.0;
+	vs1.vrot.x = -vs1.vrot.x;
+	vs1.vrot.y = -vs1.vrot.y;
+	vs1.vrot.z = vs1.vrot.z;
+	hCMPEVA = oapiCreateVessel(VName, "ProjectApollo/EVA", vs1);
+
+	cmpeva = true;
+
+	EVA* eva = (EVA*)oapiGetVesselInterface(hCMPEVA);
+
+	EVASettings evas;
+
+	evas.MissionNo = ApolloNo;
+	eva->SetEVAStats(evas);
+
+	oapiSetFocusObject(hCMPEVA);
+}
+
+void Saturn::UpdateEVA()
+{
+	VECTOR3 gpos;
+	VECTOR3 ghatch;
+	if (stage == STAGE_ORBIT_SIVB) ghatch = { 0, 0, 13.15 + 2.227 };
+	else if (stage == CSM_LEM_STAGE) ghatch = { 0, 0, 2.23204 };
+
+	Local2Global(ghatch - currentCoG, ghatch);
+
+	if (cmpeva)
+	{
+		char VName[256] = "";
+		strcpy(VName, pMission->GetCMPName().c_str());
+		hCMPEVA = oapiGetObjectByName(VName);
+
+		if (hCMPEVA == NULL)
+		{
+			cmpeva = false;
+			SetCrewNumber(3);
+		}
+		else
+		{
+			oapiGetGlobalPos(hCMPEVA, &gpos);
+			double distance = dist(gpos, ghatch);
+
+			if (distance < 0.4)
+			{
+				cmpeva = false;
+				SetCrewNumber(3);
+				oapiDeleteVessel(hCMPEVA);
+			}
+		}
+	}
 }
 
 void Saturn::SetRunningLights() {
