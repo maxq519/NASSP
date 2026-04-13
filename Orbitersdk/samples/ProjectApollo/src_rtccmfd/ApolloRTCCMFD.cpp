@@ -499,6 +499,11 @@ void ApolloRTCCMFD::Line(oapi::Sketchpad *skp, int x0, int y0, int x1, int y1)
 	skp->Line(x0 + WOFF, y0 + HOFF, x1 + WOFF, y1 + HOFF);
 }
 
+void ApolloRTCCMFD::Line2(oapi::Sketchpad* skp, int x0, int y0, int x1, int y1)
+{
+	skp->Line((CW * (2 * x0 + 1)) / 2 + WOFF, (CH * (2 * y0 + 1)) / 2 + HOFF, (CW * (2 * x1 + 1)) / 2 + WOFF, (CH * (2 * y1 + 1)) / 2 + HOFF);
+}
+
 void ApolloRTCCMFD::menuEntryUpdateUpload()
 {
 	G->EntryUpdateUplink();
@@ -1561,6 +1566,20 @@ void ApolloRTCCMFD::menuSetStarSightingTablePage()
 	SelectPage(134);
 }
 
+void ApolloRTCCMFD::menuSetSpacecraftPointingDisplayPage()
+{
+	marker = 0;
+	markermax = 10;
+	subscreen = 0;
+	subscreenmax = 2;
+	SelectPage(135);
+}
+
+void ApolloRTCCMFD::menuSetRecoveryZonesDisplayPage()
+{
+	SelectPage(136);
+}
+
 void ApolloRTCCMFD::menuPerigeeAdjustCalc()
 {
 	G->PerigeeAdjustCalc();
@@ -2361,13 +2380,15 @@ bool GenericVectorInputBox(void *id, char *str, void *data)
 	return false;
 }
 
-void ApolloRTCCMFD::GenericStringInput(std::string *val, char* message, void(ApolloRTCCMFD::*func)(void))
+void ApolloRTCCMFD::GenericStringInput(std::string *val, char* message, void(ApolloRTCCMFD::*func)(void), unsigned int minlen, unsigned int maxlen)
 {
 	void *data2;
 
 	tempData.sVal = val;
 	tempData.ptr = this;
 	tempData.func = func;
+	tempData.min1 = minlen;
+	tempData.max1 = maxlen;
 
 	data2 = &tempData;
 
@@ -2378,6 +2399,11 @@ void ApolloRTCCMFD::GenericStringInput(std::string *val, char* message, void(Apo
 bool GenericStringInputBox(void *id, char *str, void *data)
 {
 	RTCCMFDInputBoxData *arr = static_cast<RTCCMFDInputBoxData*>(data);
+
+	std::string strtemp(str);
+
+	if ((unsigned)(arr->min1) > strtemp.size()) return false;
+	if (strtemp.size() > (unsigned)(arr->max1)) return false;
 
 	arr->sVal->assign(str);
 
@@ -2600,6 +2626,28 @@ bool ApolloRTCCMFD::set_RecoveryTarget(int num)
 	return false;
 }
 
+void ApolloRTCCMFD::menuRecoveryZonesDisplayCalc()
+{
+	menuGeneralMEDRequest("Recovery Zones Display. Format: R20,VEH,Z,,,,BEGIN REV,END REV;", "R20,CSM,Z,,,,1,2;");
+}
+
+void ApolloRTCCMFD::menuCycleRecoveryZonesDisplayPages()
+{
+	if (GC->rtcc->RZPAGE.CurrentPage < GC->rtcc->RZPAGE.TotalNumPages)
+	{
+		GC->rtcc->RZPAGE.CurrentPage++;
+	}
+	else
+	{
+		GC->rtcc->RZPAGE.CurrentPage = 1;
+	}
+}
+
+void ApolloRTCCMFD::menuEnterRecoveryZones()
+{
+	menuGeneralMEDRequest("Change recovery zones. Format: R20,CSM,Z1-Z6,Area,Latitude,Longitude","R20,CSM,Z1,XXXX,0.0,0.0;");
+}
+
 void ApolloRTCCMFD::menuSetStarSightingTableInput()
 {
 	switch (marker)
@@ -2637,10 +2685,10 @@ void ApolloRTCCMFD::menuSetStarSightingTableInput()
 		GenericDoubleInput(&GC->rtcc->EZGSTMED.G30_Elev, "Enter elevation of spacecraft above ground target's local horizontal plane in degrees (0 - 90):", RAD);
 		break;
 	case 8:
-		GenericGETInput(&GC->rtcc->EZGSTMED.G30_RA, "Celestial target right ascension (Format: hr:min:sec)", NULL, PI2 / (24.0 * 3600.0));
+		GenericGETInput(&GC->rtcc->EZGSTMED.G30_RA, "Celestial target right ascension (Format: hr:min:sec)", NULL, OrbMech::RASEC_TO_RADIANS);
 		break;
 	case 9:
-		GenericGETInput(&GC->rtcc->EZGSTMED.G30_DEC, "Celestial target declination (Format: deg:min:sec)", NULL, RAD / (3600.0));
+		GenericGETInput(&GC->rtcc->EZGSTMED.G30_DEC, "Celestial target declination (Format: deg:min:sec)", NULL, OrbMech::ARCSEC_TO_RADIANS);
 		break;
 	case 10:
 		GenericDoubleInput(&GC->rtcc->EZGSTMED.G30_Att.x, "Enter roll angle in degrees", RAD);
@@ -2663,6 +2711,94 @@ void ApolloRTCCMFD::menuSetStarSightingTableInput()
 void ApolloRTCCMFD::menuStarSightingTableCalc()
 {
 	GeneralMEDRequest("G30;");
+}
+
+void ApolloRTCCMFD::menuSetSpacecraftPointingDisplayInput()
+{
+	switch (marker)
+	{
+	case 0:
+		if (GC->rtcc->EZGSTMED.G40_Mode < 4) GC->rtcc->EZGSTMED.G40_Mode++;
+		else GC->rtcc->EZGSTMED.G40_Mode = 1;
+		break;
+	case 1:
+		GenericStringInput(&GC->rtcc->EZGSTMED.G40_InstrID, "Enter desired instrument ID. The last 3 characters must be CSM or LEM (3-6 characters):", NULL, 3, 6);
+		break;
+	case 2:
+		if (GC->rtcc->EZGSTMED.G40_Mode == 1)
+		{
+			sprintf(Buffer, "Mode 1: Enter target ID. The last character must be E or M. (5-8 characters):");
+		}
+		else if (GC->rtcc->EZGSTMED.G40_Mode == 2)
+		{
+			sprintf(Buffer, "Mode 2: Enter target ID. (5-8 characters):");
+		}
+		else if (GC->rtcc->EZGSTMED.G40_Mode == 3)
+		{
+			sprintf(Buffer, "Mode 3: Enter target ID. The last 3 characters must be a valid star number. (5-8 characters):");
+		}
+		else
+		{
+			sprintf(Buffer, "Mode 4: Enter target ID. Enter 7 characters. The last 3 must be CSM or LEM:");
+		}
+		GenericStringInput(&GC->rtcc->EZGSTMED.G40_TargetName, Buffer, NULL, 5, 8);
+		break;
+	case 3:
+		GenericDoubleInput(&GC->rtcc->EZGSTMED.G40_Lat, "Enter ground target latitude in degrees:", RAD);
+		break;
+	case 4:
+		GenericDoubleInput(&GC->rtcc->EZGSTMED.G40_Lng, "Enter ground target longitude in degrees:", RAD);
+		break;
+	case 5:
+		GenericDoubleInput(&GC->rtcc->EZGSTMED.G40_Ht, "Enter ground target height in nautical miles:", 1852.0);
+		break;
+	case 6:
+		GenericGETInput(&GC->rtcc->EZGSTMED.G40_RA, "Celestial target right ascension (Format: hr:min:sec)", NULL, OrbMech::RASEC_TO_RADIANS);
+		break;
+	case 7:
+		GenericGETInput(&GC->rtcc->EZGSTMED.G40_DEC, "Celestial target declination (Format: deg:min:sec)", NULL, OrbMech::ARCSEC_TO_RADIANS);
+		break;
+	case 8:
+		if (GC->rtcc->EZGSTMED.G40_Matrix < RTCC_REFSMMAT_TYPE_LLD)
+		{
+			GC->rtcc->EZGSTMED.G40_Matrix++;
+		}
+		else
+		{
+			GC->rtcc->EZGSTMED.G40_Matrix = 1;
+		}
+		break;
+	case 9:
+		if (GC->rtcc->EZGSTMED.G40_AttRef < 2)
+		{
+			GC->rtcc->EZGSTMED.G40_AttRef++;
+		}
+		else
+		{
+			GC->rtcc->EZGSTMED.G40_AttRef = 0;
+		}
+		break;
+	case 10:
+		GenericDoubleInput(&GC->rtcc->EZGSTMED.G40_DokAngle, "Enter docking angle in degrees:", RAD);
+		break;
+	}
+}
+
+void ApolloRTCCMFD::menuMEDG41()
+{
+	menuGeneralMEDRequest("Change S/C pointing instrument. Format: Instrument ID (3-6 characters), Action Code (A, D or R), RX, RY;","G41,XXXXXX,A,0.0,0.0;");
+}
+
+void ApolloRTCCMFD::menuSpacecraftPointingDisplayCalc()
+{
+	char Buff1[128], Buff2[128], Buff3[128];
+
+	GET_Display(Buff1, GC->rtcc->EZGSTMED.G42_GET1, false);
+	GET_Display(Buff2, GC->rtcc->EZGSTMED.G42_GET5, false);
+	GET_Display(Buff3, GC->rtcc->EZGSTMED.G42_GETT, false);
+	sprintf_s(Buffer, "G42,%s,%s,%s;", Buff1, Buff2, Buff3);
+
+	menuGeneralMEDRequest("Queue S/C point display. Format: G42, GET1, GET5, GETT;", Buffer);
 }
 
 void ApolloRTCCMFD::menuSaveDODREFSMMAT()
@@ -3180,16 +3316,9 @@ void ApolloRTCCMFD::set_RTEDManualDV(VECTOR3 DV)
 	GC->rtcc->med_f81.XDV = DV * 0.3048;
 }
 
-void ApolloRTCCMFD::menuTransferSPQorDKIToMPT()
+void ApolloRTCCMFD::menuTransferLDPOrSPQorDKIToMPT()
 {
-	if (GC->rtcc->med_m70.Plan >= 0)
-	{
-		G->Transfer_SPQ_Or_DKI_To_MPT();
-	}
-	else
-	{
-		G->TransferDescentPlanToMPT();
-	}
+	G->Transfer_LDP_Or_SPQ_Or_DKI_To_MPT();
 }
 
 void ApolloRTCCMFD::menuBackToSPQorDKIPage()
@@ -3198,7 +3327,7 @@ void ApolloRTCCMFD::menuBackToSPQorDKIPage()
 	{
 		menuSetSPQPage();
 	}
-	else if (GC->rtcc->med_m70.Plan == 1)
+	else if (GC->rtcc->med_m70.Plan >= 1)
 	{
 		menuSetDKIPage();
 	}
@@ -4801,8 +4930,17 @@ void ApolloRTCCMFD::menuMPTUpdate()
 
 void ApolloRTCCMFD::menuMPTTrajectoryUpdateCSM()
 {
+	if (GC->rtcc->pCSM)
+	{
+		sprintf(Buffer, "%s", GC->rtcc->pCSM->GetName());
+	}
+	else
+	{
+		sprintf(Buffer, "");
+	}
+
 	bool DifferentialCorrectionSolutionCSMInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Choose vessel for the CSM ground tracking solution (leave blank for CSM selected on config page):", DifferentialCorrectionSolutionCSMInput, 0, 50, (void*)this);
+	oapiOpenInputBox("Choose vessel for the CSM ground tracking solution:", DifferentialCorrectionSolutionCSMInput, Buffer, 50, (void*)this);
 }
 
 bool DifferentialCorrectionSolutionCSMInput(void* id, char *str, void *data)
@@ -4816,8 +4954,17 @@ bool DifferentialCorrectionSolutionCSMInput(void* id, char *str, void *data)
 
 void ApolloRTCCMFD::menuMPTTrajectoryUpdateLEM()
 {
+	if (GC->rtcc->pLM)
+	{
+		sprintf(Buffer, "%s", GC->rtcc->pLM->GetName());
+	}
+	else
+	{
+		sprintf(Buffer, "");
+	}
+
 	bool DifferentialCorrectionSolutionLEMInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Choose vessel for the LM ground tracking solution (leave blank for LM selected on config page):", DifferentialCorrectionSolutionLEMInput, 0, 50, (void*)this);
+	oapiOpenInputBox("Choose vessel for the LM ground tracking solution:", DifferentialCorrectionSolutionLEMInput, Buffer, 50, (void*)this);
 }
 
 bool DifferentialCorrectionSolutionLEMInput(void* id, char *str, void *data)
@@ -4829,34 +4976,20 @@ bool DifferentialCorrectionSolutionLEMInput(void* id, char *str, void *data)
 	return false;
 }
 
-bool ApolloRTCCMFD::set_DifferentialCorrectionSolution(char *str, bool csm)
+bool ApolloRTCCMFD::set_DifferentialCorrectionSolution(char* str, bool csm)
 {
 	//To update display immediately
 	GC->rtcc->VectorPanelSummaryBuffer.gmt = -10000000000000.0;
 
 	OBJHANDLE hVessel;
-	VESSEL *v = NULL;
+	VESSEL* v = NULL;
 
-	if (strcmp(str, "") == 0) //If str is empty, use CSM or LM from config page
+	hVessel = oapiGetVesselByName(str);
+	if (hVessel)
 	{
-		if (csm)
-		{
-			v = GC->rtcc->pCSM;
-		}
-		else
-		{
-			v = GC->rtcc->pLM;
-		}
+		v = oapiGetVesselInterface(hVessel);
 	}
-	else //Otherwise use the input string to get the vessel name
-	{
-		hVessel = oapiGetVesselByName(str);
-		if (hVessel)
-		{
-			v = oapiGetVesselInterface(hVessel);
-		}
-		else return false;
-	}
+	else return false;
 
 	if (v)
 	{
@@ -5028,7 +5161,7 @@ bool MoveToUsableTableLEMInput(void* id, char *str, void *data)
 void ApolloRTCCMFD::menuEphemerisUpdateCSM()
 {
 	bool EphemerisUpdateCSMInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Move CSM vector to ephemeris update. Input: CMC, LGC, AGS, IU, HSR or DC", EphemerisUpdateCSMInput, 0, 50, (void*)this);
+	oapiOpenInputBox("Move CSM vector to ephemeris update. Input: CMC, LGC, AGS, IU, HSR or DC", EphemerisUpdateCSMInput, "DC", 50, (void*)this);
 }
 
 bool EphemerisUpdateCSMInput(void* id, char *str, void *data)
@@ -5075,7 +5208,7 @@ bool EphemerisUpdateCSMInput(void* id, char *str, void *data)
 void ApolloRTCCMFD::menuEphemerisUpdateLEM()
 {
 	bool EphemerisUpdateLEMInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Move LEM vector to ephemeris update. Input: CMC, LGC, AGS, IU, HSR or DC", EphemerisUpdateLEMInput, 0, 50, (void*)this);
+	oapiOpenInputBox("Move LEM vector to ephemeris update. Input: CMC, LGC, AGS, IU, HSR or DC", EphemerisUpdateLEMInput, "DC", 50, (void*)this);
 }
 
 bool EphemerisUpdateLEMInput(void* id, char *str, void *data)
@@ -9914,9 +10047,11 @@ void ApolloRTCCMFD::SelectMCCScreen(int num)
 	case 347: menuSetGroundtrackDigitalsPage(); break;
 	case 363: menuSetRTEDigitalsPage(); break;
 	case 366: menuSetRTEConstraintsPage(); break;
+	case 1453: menuSetRecoveryZonesDisplayPage(); break;
 	case 1501: menuSetMoonriseMoonsetTablePage(); break;
 	case 1502: menuSetSunriseSunsetTablePage(); break;
 	case 1503: menuSetNextStationContactsPage(); break;
+	case 1504: menuSetSpacecraftPointingDisplayPage(); break;
 	case 1505: menuSetRecoveryAscendingNodeDisplayPage(); break;
 	case 1506: menuSetExpSiteAcqPage(); break;
 	case 1508: menuSetLandmarkAcquisitionDisplayPage(); break;

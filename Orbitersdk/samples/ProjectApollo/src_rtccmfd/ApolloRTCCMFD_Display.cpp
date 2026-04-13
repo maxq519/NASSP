@@ -3531,9 +3531,11 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		Text(skp, x, y, "0347 GRND TRK DIG"); y++;
 		Text(skp, x, y, "0363 RET ERTH DIG"); y++;
 		Text(skp, x, y, "0366 RET ERTH TRG"); y++;
+		Text(skp, x, y, "1453 RECOV ZONES"); y++;
 		Text(skp, x, y, "1501 MOONRISE SET"); y++;
 		Text(skp, x, y, "1502 SUNRISE SET"); y++;
 		Text(skp, x, y, "1503 NXT STA CONT"); y++;
+		Text(skp, x, y, "1504 S/C POINTING"); y++;
 		Text(skp, x, y, "1505 REC ASC NODE"); y++;
 		Text(skp, x, y, "1506 EXP SITE ACQ"); y++;
 		Text(skp, x, y, "1508 LMK ACQ"); y++;
@@ -4350,13 +4352,13 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		}
 		Line(skp, CW, CH * 3, CW * 42, CH * 3);
 		Line(skp, CW, CH * 4, CW * 42, CH * 4);
-		Line(skp, (CW * 15) / 2, CH * 3, (CW * 15) / 2, CH * 28);
-		Line(skp, (CW * 31) / 2, CH * 3, (CW * 31) / 2, CH * 28);
-		Line(skp, (CW * 49) / 2, CH * 3, (CW * 49) / 2, CH * 28);
+		Line(skp, (CW * 15) / 2, CH * 3, (CW * 15) / 2, CH * 25);
+		Line(skp, (CW * 31) / 2, CH * 3, (CW * 31) / 2, CH * 25);
+		Line(skp, (CW * 49) / 2, CH * 3, (CW * 49) / 2, CH * 25);
 		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
 		SetMOCRFont(skp, 3, true);
-		Text(skp, 13, 1, "%04d", block->UpdateNo);
-		Text_GET_HHHMMSS(skp, 31, 1, block->GET);
+		Text(skp, 13, 1, "%04d", block->SequenceNo);
+		Text_GET_HHHMMSS(skp, 31, 1, block->GenGET);
 		Text(skp, 11, 2, block->MatrixID);
 		Text(skp, 32, 2, block->MatrixType == 2 ? "DESIRED" : "ACTUAL");
 		for (int i = 0; i < 024; i++)
@@ -4367,7 +4369,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		{
 			Text(skp, 40, 6 + i * 2, "%+.8lf", block->REFSMMAT.data[i]);
 		}
-		Text(skp, 10, 26, block->error);
+		Text(skp, 30, 26, block->error);
 	}
 	break;
 	case 54:
@@ -9392,6 +9394,190 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			DFLDynamicData(skp, 53, 3);
 		}
 		break;
+	case 135:
+		if (subscreen == 0)
+		{
+			skp->SetTextAlign(oapi::Sketchpad::CENTER);
+			skp->Text(W / 2, CH / 2, "Spacecraft Pointing Inputs", 26);
+			skp->SetTextAlign(oapi::Sketchpad::LEFT);
+			x = 1;  y = 3; dx = 8;
+			Text(skp, x, marker + y, "*");
+			x++;
+			Text(skp, x, y, "MODE:");
+			if (GC->rtcc->EZGSTMED.G40_Mode == 1) Text(skp, x + dx, y, "Earth/Moon Target");
+			else if (GC->rtcc->EZGSTMED.G40_Mode == 2) Text(skp, x + dx, y, "General Celestial");
+			else if (GC->rtcc->EZGSTMED.G40_Mode == 3) Text(skp, x + dx, y, "GOST Star");
+			else Text(skp, x + dx, y, "Orbiting Object");
+			y++;
+			Text(skp, x, y, "INST:");
+			Text(skp, x + dx, y, GC->rtcc->EZGSTMED.G40_InstrID);
+			y++;
+			Text(skp, x, y, "TARGET:");
+			Text(skp, x + dx, y, GC->rtcc->EZGSTMED.G40_TargetName);
+			y++;
+			if (GC->rtcc->EZGSTMED.G40_Mode == 1)
+			{
+				Text(skp, x, y, "LAT:");
+				Text(skp, x + dx, y, "%+06.2lf", GC->rtcc->EZGSTMED.G40_Lat * DEG);
+				y++;
+				Text(skp, x, y, "LNG:");
+				Text(skp, x + dx, y, "%+05.2lf", GC->rtcc->EZGSTMED.G40_Lng * DEG);
+				y++;
+				Text(skp, x, y, "HEI:");
+				Text(skp, x + dx, y, "%+.2lf", GC->rtcc->EZGSTMED.G40_Ht / 1852.0);
+				y++;
+			}
+			else y += 3;
+			if (GC->rtcc->EZGSTMED.G40_Mode == 2)
+			{
+				Text(skp, x, y, "RA:");
+				Text_GET_HHMMSS(skp, x + dx, y, GC->rtcc->EZGSTMED.G40_RA / PI2 * 24.0 * 3600.0);
+				y++;
+				Text(skp, x, y, "DEC:");
+				FormatDeclination(Buffer, GC->rtcc->EZGSTMED.G40_DEC * DEG * 3600.0);
+				Text(skp, x + dx, y, Buffer);
+				y++;
+			}
+			else y += 2;
+			Text(skp, x, y, "MATRIX:");
+			GC->rtcc->EMGSTGENName(GC->rtcc->EZGSTMED.G40_Matrix, Buffer);
+			Text(skp, x + dx, y, Buffer);
+			y++;
+			Text(skp, x, y, "ATREF:");
+			if (GC->rtcc->EZGSTMED.G40_AttRef == 0) Text(skp, x + dx, y, "IMCSM");
+			else if (GC->rtcc->EZGSTMED.G40_AttRef == 1) Text(skp, x + dx, y, "IMLEM");
+			else Text(skp, x + dx, y, "FDLEM");
+			y++;
+			Text(skp, x, y, "DOKANG:");
+			Text(skp, x + dx, y, "%+.5lf", GC->rtcc->EZGSTMED.G40_DokAngle* DEG);
+			y++;
+		}
+		else if (subscreen == 1)
+		{
+			skp->SetTextAlign(oapi::Sketchpad::CENTER);
+			skp->Text(W / 2, CH / 2, "Spacecraft Pointing Instruments", 31);
+			skp->SetTextAlign(oapi::Sketchpad::LEFT);
+
+			std::string str;
+
+			for (int i = 0; i < 12; i++)
+			{
+				Text(skp, 3, i + 3, "%02d:", i + 1);
+
+				str.assign(GC->rtcc->EZGSTMED.G41_Instruments[i].ID);
+
+				if (str == "")
+				{
+					Text(skp, 7, i + 3, "Empty Slot");
+				}
+				else
+				{
+					Text(skp, 7, i + 3, str);
+					Text(skp, 15, i + 3, "%.5lf", GC->rtcc->EZGSTMED.G41_Instruments[i].RX* DEG);
+					Text(skp, 25, i + 3, "%.5lf", GC->rtcc->EZGSTMED.G41_Instruments[i].RY* DEG);
+				}
+			}
+		}
+		else
+		{
+			skp->SetPen(pen2);
+			SetMOCRFont(skp, 2, false);
+			GetCharSize(skp, CW, CH);
+			SetMOCRDisplayCentered(2);
+			Text(skp, 22, 0, "SPACECRAFT POINTING DISPLAY");
+			Text(skp, 60, 0, "1504");
+			Text(skp, 7, 1, "INST");
+			Text(skp, 20, 1, "MODE");
+			Text(skp, 34, 1, "AT REF");
+			Text(skp, 0, 2, "TARGET");
+			Text(skp, 20, 2, "RA");
+			Text(skp, 42, 2, "AOS");
+			Text(skp, 55, 2, "LOS");
+			Text(skp, 1, 3, "REV");
+			Text(skp, 20, 3, "DEC");
+			Text(skp, 34, 3, "GET");
+			Text(skp, 1, 4, "LAT");
+			Text(skp, 16, 4, "REFSMMAT");
+			Text(skp, 34, 4, "GMT");
+			Text(skp, 1, 5, "LONG");
+			Text(skp, 18, 5, "START GET");
+			Text(skp, 34, 5, "BS-T1 RA");
+			Text(skp, 52, 5, "DEC");
+			Text(skp, 1, 6, "ALT");
+			Text(skp, 34, 6, "STAR");
+			Text(skp, 44, 6, "SPA");
+			Text(skp, 54, 6, "SXP");
+
+			Text(skp, 5, 8, "GET");
+			Text(skp, 15, 8, "R/DR");
+			Text(skp, 22, 8, "P/DP");
+			Text(skp, 29, 8, "Y/DY");
+			Text(skp, 36, 8, "ALT");
+			Text(skp, 43, 8, "EL");
+			Text(skp, 49, 8, "RNG");
+			Text(skp, 55, 8, "SUN"); //TBD: Smaller, SUN ANG
+			Text(skp, 60, 8, "M/E"); //TBD: Smaller, MOON/EARTH
+
+			Text(skp, 0, 11, "T1");
+			Text(skp, 0, 15, "T2");
+			Text(skp, 0, 19, "T3");
+			Text(skp, 0, 23, "T4");
+			Text(skp, 0, 27, "T5");
+
+			Line2(skp, 15, 2, 15, 7);
+			Line2(skp, 32, 1, 32, 7);
+			Line2(skp, 0, 7, 64, 7);
+			Line2(skp, 0, 9, 64, 9);
+			Line2(skp, 13, 7, 13, 30);
+			Line2(skp, 20, 7, 20, 30);
+			Line2(skp, 27, 7, 27, 30);
+			Line2(skp, 34, 7, 34, 30);
+			Line2(skp, 41, 7, 41, 30);
+			Line2(skp, 47, 7, 47, 30);
+			Line2(skp, 54, 7, 54, 30);
+			Line2(skp, 58, 7, 58, 30);
+
+			DFLDynamicData(skp, 1504, 2);
+		}
+		break;
+	case 136:
+		SetMOCRFont(skp, 3, false);
+		GetCharSize(skp, CW, CH);
+		SetMOCRDisplayCentered(3);
+		Text(skp, 16, 0, "RECOVERY ZONES DISPLAY");
+		Text(skp, 52, 0, "1453");
+		Text(skp, 4, 2, "VEH");
+		Text(skp, 14, 2, "STA ID");
+		Text(skp, 52, 2, "/");
+		Text(skp, 27, 4, "TCA         TCA-1MIN TCA+1MIN");
+		Text(skp, 3, 5, "ID   REV BRG RNG   GET       LAT      LAT      LAT");
+		Text(skp, 32, 6, "LNG      LNG      LNG");
+		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
+		SetMOCRFont(skp, 3, true);
+		Text(skp, 11, 2, GC->rtcc->RZPAGE.VehicleName);
+		Text(skp, 28, 2, GC->rtcc->RZPAGE.StationID);
+		Text(skp, 52, 2, "%d", GC->rtcc->RZPAGE.CurrentPage);
+		Text(skp, 54, 2, "%d", GC->rtcc->RZPAGE.TotalNumPages);
+		{
+			int j = (GC->rtcc->RZPAGE.CurrentPage - 1) * 10;
+			for (int i = 0; i < 10; i++)
+			{
+				if (i + j >= GC->rtcc->RZPAGE.TotalNumEntries) break;
+				Text(skp, 7, 8 + i * 2, GC->rtcc->RZPAGE.table[i + j].ID);
+				Text(skp, 11, 8 + i * 2, "%03d", GC->rtcc->RZPAGE.table[i + j].Rev);
+				Text(skp, 15, 8 + i * 2, "%.0lf", GC->rtcc->RZPAGE.table[i + j].Bearing);
+				Text(skp, 19, 8 + i * 2, "%.0lf", GC->rtcc->RZPAGE.table[i + j].Distance);
+				Text_GET_HHHMMSS(skp, 29, 8 + i * 2, GC->rtcc->RZPAGE.table[i + j].GETCA);
+				Text_Latitude(skp, 37, 8 + i * 2, GC->rtcc->RZPAGE.table[i + j].lat_TCA);
+				Text_Longitude(skp, 37, 9 + i * 2, GC->rtcc->RZPAGE.table[i + j].lng_TCA);
+				Text_Latitude(skp, 46, 8 + i * 2, GC->rtcc->RZPAGE.table[i + j].lat_TCAMin1);
+				Text_Longitude(skp, 46, 9 + i * 2, GC->rtcc->RZPAGE.table[i + j].lng_TCAMin1);
+				Text_Latitude(skp, 55, 8 + i * 2, GC->rtcc->RZPAGE.table[i + j].lat_TCAPlus1);
+				Text_Longitude(skp, 55, 9 + i * 2, GC->rtcc->RZPAGE.table[i + j].lng_TCAPlus1);
+			}
+		}
+		Text(skp, 35, 27, GC->rtcc->RZPAGE.ErrorMessage);
+		break;
 	}
 
 	return true;
@@ -10191,6 +10377,10 @@ void ApolloRTCCMFD::SetMOCRDisplayCentered(int size)
 	int HH = 0, WW = 0;
 	switch (size)
 	{
+	case 1:
+		HH = 42;
+		WW = 84;
+		break;
 	case 2:
 		HH = 32;
 		WW = 64;
