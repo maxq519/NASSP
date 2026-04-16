@@ -472,7 +472,7 @@ void LEM::SystemsInit()
 	PCM.Init(this, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:PCMHEAT"));
 	// DSEA
 	DSEA.Init(this, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:DSEHEAT"));
-	TapeRecorderTB.WireTo(&INST_PCMTEA_CB); //Tape Recorder TB powered by PCM/TE cb
+	TapeRecorderTB.WireTo(&COMM_DISP_CB);
 
 	// CBs
 	INST_SIG_CONDR_1_CB.MaxAmps = 2.0;
@@ -1610,14 +1610,13 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	DockLights.Timestep(simdt);
 	UtilLights.Timestep(simdt);
 	COASLights.Timestep(simdt);
-	FloodLights.Timestep(simdt);
 	pfira.Timestep(simdt);
 
 	// Do this toward the end so we can see current system state
 	scera1.Timestep();
 	scera2.Timestep();
 	CWEA.Timestep(simdt);
-	DSEA.Timestep(simt, simdt);
+	DSEA.Timestep(simdt);
 
 	//Treat LM O2 as gas every timestep
 	DesO2Tank->BoilAllAndSetTemp(294.261);
@@ -2316,7 +2315,7 @@ void LEM::GetECSStatus(LEMECSStatus &ecs)
 		ecs.cdrStatus = 0;
 	}
 
-	if (EVA_IP[1])
+	if (EVA_IP[1] || spaceeva)
 	{
 		ecs.lmpStatus = 2;
 	}
@@ -2412,6 +2411,9 @@ void LEM::StartEVA()
 	if (ForwardHatch.IsOpen() && GroundContact()) {
 		ToggleEva = true;
 	}
+	else if (ForwardHatch.IsOpen() && !GroundContact() && ApolloNo == 9) {
+		ToggleSpaceEVA();
+	}
 }
 
 void LEM::CheckDescentStageSystems()
@@ -2496,6 +2498,18 @@ void LEM::CreateMissionSpecificSystems()
 		Panel12AntYawKnob.SetInitValue(6.0); //Initializes S Band Antenna Yaw Knob To Proper Closeout Angles
 		LandingAntSwitch.SetState(1); //Initializes LDG ANT Switch To Proper Closeout Position (DES)
 	}
+
+	LR.SelfTest(pMission->GetLMNumber());
+	RR.SelfTest(pMission->GetLMNumber());
+
+	//Create cue cards
+	unsigned loc, counter = 0;
+	std::string meshname;
+	VECTOR3 ofs;
+	while (pMission->GetLMCueCards(counter, loc, meshname, ofs) == false)
+	{
+		CueCards.CreateCueCard(loc, meshname, ofs);
+	}
 }
 
 // SYSTEMS COMPONENTS
@@ -2552,7 +2566,7 @@ bool LEM_RadarTape::PowerFailure()
 	return false;
 }
 
-bool LEM_RadarTape::SignalFailure()
+bool LEM_RadarTape::SignalFailure() //TODO: Light needs to flash progressively faster from 5 fps to 0 fps then go solid
 {
 	if (lem->AltRngMonSwitch.GetState() == TOGGLESWITCH_UP)
 	{
@@ -2597,24 +2611,52 @@ bool LEM_RadarTape::TimingFailure()
 		return false;
 }
 
+double LEM_RadarTape::GetLRAltitude() //Applies roundoff error for LR data into tapemeter
+{
+	if (lem->LR.GetAltitude() < 2500.0 * 0.3048)
+	{
+		return (lem->LR.GetAltitude() * (11.583/11.6));
+	}
+	else
+	{
+		return (lem->LR.GetAltitude() * (2.316/2.32));
+	}
+}
+
+double LEM_RadarTape::GetLRAltitudeRate() //Applies roundoff error for LR data into tapemeter
+{
+	return (lem->LR.GetAltitudeRate() * (-19.41/-20.0));
+}
+
+double LEM_RadarTape::GetRRRange() //Returns RR Range, no scale factor applied currently
+{
+	return (lem->RR.GetRadarRange());
+}
+
+double LEM_RadarTape::GetRRRate() //Applies roundoff error for RR data into tapemeter
+{
+	return (lem->RR.GetRadarRate() * (-19.9/-20.0));
+}
 
 void LEM_RadarTape::Timestep(double simdt) {
-	
+
 	if (!IsPowered())
 	{
 		return;
 	}
-	
-	if( lem->AltRngMonSwitch.GetState()==TOGGLESWITCH_UP ) {
-		setRange(lem->RR.GetRadarRange());
-		setRate(lem->RR.GetRadarRate());
-	} 
-	else {
+
+	if (lem->AltRngMonSwitch.GetState()==TOGGLESWITCH_UP) 
+	{
+		setRange(GetRRRange());
+		setRate(GetRRRate());
+	}
+	else 
+	{
 		if (lem->ModeSelSwitch.IsUp()) // LR
 		{
 			if (lem->LR.IsRangeDataGood())
 			{
-				setRange(lem->LR.GetAltitude());
+				setRange(GetLRAltitude() * cos(Radians(15))); // Tapemeter slant range bias, multiplied by cos 15 deg
 			}
 			else
 			{
@@ -2622,12 +2664,15 @@ void LEM_RadarTape::Timestep(double simdt) {
 			}
 			if (lem->LR.IsVelocityDataGood())
 			{
-				setRate(lem->LR.GetAltitudeRate());
+				if ((lem->pMission->GetLMNumber()) == 3)
+				{
+					setRate(lem->LR.GetAltitudeRate() * 1.82388664); // Generates seen rate signal from LM-3 \\FIXME: This is a hack, need to investigate why LM-3 generates this rate signal. LM-4 might need similar adjustment later
+				}
+				else
+				{
+					setRate(GetLRAltitudeRate());
+				}
 			}
-			/*else
-			{
-				setRate(0);
-			}*/
 		}
 		else if (lem->ModeSelSwitch.IsCenter()) //PGNS
 		{
@@ -2639,14 +2684,16 @@ void LEM_RadarTape::Timestep(double simdt) {
 			setRange(ags_alt);
 			setRate(ags_altrate);
 		}
-
 	}
+
 	// Altitude/Range
+	reqRange = fmod(reqRange, 405.0*1852.0);
+
 	if (reqRange < (1000.0 * 0.3048))
 	{
 		desRange = 6317.0 + 2086.0 - 82.0 - ((reqRange * 3.2808399) * 40.0 * 50.0 / 1000.0);
 	}
-	else if (reqRange < (120000.0 * 0.3048) )
+	else if (reqRange < (120000.0 * 0.3048))
 	{
 		desRange = 6443.0 - 82.0 - ((reqRange * 3.2808399) * 40.0 / 1000.0);
 	}
@@ -2679,7 +2726,7 @@ void LEM_RadarTape::Timestep(double simdt) {
 		reqRate += 304.8;
 	}
 
-	desRate  = 2881.0 - 82.0 -  (reqRate * 3.2808399 * 40.0 * 100.0 / 1000.0);
+	desRate = 2881.0 - 82.0 + (reqRate * 3.2808399 * 40.0 * 100.0 / 1000.0);
 	TapeDrive(dispRate, desRate, 500.0, simdt);
 	if (dispRate < 0)
 	{

@@ -2238,6 +2238,10 @@ void ProjectApolloMFD::menuStartEVA()
 	{
 		lem->StartEVA();
 	}
+	else if (saturn)
+	{
+		saturn->StartCMPEVA();
+	}
 }
 
 void ProjectApolloMFD::menuConnectCSMO2Hose()
