@@ -44,6 +44,7 @@
 #include "tracer.h"
 #include "papi.h"
 #include "Mission.h"
+#include "Autosave.h"
 
 #include "connector.h"
 #include "nassputils.h"
@@ -629,6 +630,7 @@ void LEM::Init()
 	windowshadesidx = -1;
 	xpointershadesidx = -1;
 	hLMPointingArrowidx = -1;
+	hLMVCOpticsidx = -1;
 	LMvccuecardsarrowsidx = -1;
 
 	drogue = NULL;
@@ -864,9 +866,9 @@ int LEM::clbkConsumeDirectKey(char* kstate)
 	// Only override these keys if the user is holding no modifier keys, Alt only, or Ctrl + Alt.
 	if (GetAttitudeMode() == ATTITUDEMODE::ATTMODE_ROT && !(KEYMOD_CONTROL(kstate) && !KEYMOD_ALT(kstate)) && !KEYMOD_SHIFT(kstate)) {
 		// Possible deflection amounts are:
-		// No key modifiers: 11.5° (max proportional rate, but not hardover)
-		// Alt: 13° (full deflection, triggering hardover switches)
-		// Ctrl + Alt: 0.75° (triggering out-of-detent switches, but not commanding thrust)
+		// No key modifiers: 11.5ï¿½ (max proportional rate, but not hardover)
+		// Alt: 13ï¿½ (full deflection, triggering hardover switches)
+		// Ctrl + Alt: 0.75ï¿½ (triggering out-of-detent switches, but not commanding thrust)
 		double deflectionDegrees = KEYMOD_ALT(kstate) ? KEYMOD_CONTROL(kstate) ? 0.75 : 13.0 : 11.5;
 		double deflectionPercent = deflectionDegrees / 13.0;
 
@@ -1376,6 +1378,19 @@ void LEM::SetAnimations(double simdt) {
 	if (AOTReticleDetent.GetState() == 0) AOT_ReticleKnobState.action = AnimState::CLOSING;
 	else AOT_ReticleKnobState.action = AnimState::OPENING;
 	DoMeshAnimation(AOT_ReticleKnobState, AOT_ReticleKnobAnimTrans, 0.1, simdt);
+
+	// Optics Shift Selector Animation
+	double targetPos = optics.OpticsShaft * (1.0 / 6.0);
+	double diff = fmod(targetPos - AOT_ShaftSelectorRotState.pos + 1.5, 1.0) - 0.5;
+	if (abs(diff) > 0.001) {
+		double maxStep = simdt * 2.0;
+		double actualStep = (maxStep > abs(diff)) ? diff : (diff > 0 ? maxStep : -maxStep);
+		AOT_ShaftSelectorRotState.pos += actualStep;
+		AOT_ShaftSelectorRotState.pos = fmod(AOT_ShaftSelectorRotState.pos + 1.0, 1.0);
+	} else {
+		AOT_ShaftSelectorRotState.pos = targetPos;
+	}
+	SetAnimation(AOT_ShaftSelectorAnimRot, AOT_ShaftSelectorRotState.pos);
 }
 
 //
@@ -1528,6 +1543,9 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 	}
 
 	if (spaceeva)UpdateSpaceEVA(); //if lmp eva active (vessel created), enables EVA Timestep
+
+	// Autosave (checks focus internally, reads config from file)
+	NASSPAutosave::Update(GetHandle(), GetName(), pMission->GetMissionName().c_str(), MissionTime);
 }
 
 

@@ -51,6 +51,7 @@
 #include "LVDC.h"
 #include "iu.h"
 #include "Mission.h"
+#include "Autosave.h"
 
 #include "eva.h"
 
@@ -673,6 +674,21 @@ void Saturn::initSaturn()
 	ChutesAttached = true;
 	CSMAttached = true;
 	SIMBayPanelJett = false;
+	SubSatLaunched = false;
+	SubSatRetracted = false;
+	DipoleAntennasJett = false;
+	GammaBayDeployed = false;
+	MassSpectrometerDeployed = false;
+	GammaBayJett = false;
+	MassSpectrometerJett = false;
+	DipoleAntenna1Deployed = false;
+	DipoleAntenna2Deployed = false;
+	MappingCameraCoverDeployed = false;
+	XRayCoverDeployed = false;
+	IRCoverDeployed = false;
+	UVCoverDeployed = false;
+	PanoramicCameraON = false;
+	MappingCameraExtended = false;
 
 	TLISoundsLoaded = false;
 	IUSCContPermanentEnabled = true;
@@ -756,6 +772,7 @@ void Saturn::initSaturn()
 	hLC34 = 0;
 	hLC37 = 0;
 	hLCC = 0;
+	hSubSatellite = 0;
 
 	//
 	// Apollo 13 flags.
@@ -794,6 +811,9 @@ void Saturn::initSaturn()
 	imu.SetVessel(this, false);
 	dsky.Init(&LeftNumericLights.Variable_115_5VAC_Output, &CMCDCBusFeeder, &NumericRotarySwitch, &LeftIntegralLights.Variable_0_115VAC_Int_Output);
 	dsky2.Init(&LEBNumericLights.Variable_115_5VAC_Output, &CMCDCBusFeeder, &Panel100NumericRotarySwitch, &LEBIntegralLights.Variable_0_115VAC_Int_Output);
+
+	//SIMBay Initialization (Only J Missions, Apollo 15+)
+	simbay.Init(this);
 
 	//
 	// Configure SECS.
@@ -1161,6 +1181,16 @@ void Saturn::initSaturn()
 	smidx = -1;
 	cmvccuecardsarrowsidx = -1;
 	hcmPointingArrowidx = -1;
+	hCMVCOpticsidx = -1;
+
+
+	yagiidx = -1;
+	simbay1idx = -1;
+	simbay2idx = -1;
+	dipoleboxesidx = -1;
+	dipoleantenna1idx = -1;
+	dipoleantenna2idx = -1;
+	subsatellitestoredidx = -1;
 
 	vcmesh = NULL;
 	vis = NULL;
@@ -1194,6 +1224,8 @@ void Saturn::initSaturn()
 	sivb = NULL;
 
 	Panel181 = NULL;
+	Panel230CSM112 = NULL;
+	Panel230CSM114 = NULL;
     Panel277 = NULL;
 	Panel278J = NULL;
 
@@ -1583,8 +1615,10 @@ void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 	TRACE(buffer);
 
 	SetAnimations(simdt);
+	if (viewpos == SATVIEW_OPTICS_SXT || viewpos == SATVIEW_OPTICS_SCT)	UpdateCMVCOptics();
 //	UpdatePointingArrow();
-//	InitFDAICustomCamera();
+//	UpdateOpticsCustomCam();
+
 
 	//
 	// We die horribly if you set 100x or higher acceleration during launch.
@@ -1650,7 +1684,10 @@ void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 
 	if (cmpeva)UpdateEVA(); //if cmp eva active (vessel created), enables EVA Timestep
 
-	sprintf(buffer, "End time(0) %lld", time(0)); 
+	// Autosave (checks focus internally, reads config from file)
+	NASSPAutosave::Update(GetHandle(), GetName(), pMission->GetMissionName().c_str(), MissionTime);
+
+	sprintf(buffer, "End time(0) %lld", time(0));
 	TRACE(buffer);
 }
 
@@ -2013,6 +2050,13 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	char buffer[100];
 	sprintf(buffer, "%d", cmpeva);
 	oapiWriteScenario_string(scn, "CMPEVA", buffer);
+
+	//save state of sim bay instruments
+	if (pMission->GetPanel230Version() == 2) hf_antenna_1.SaveState(scn);
+	if (pMission->GetPanel230Version() == 2) hf_antenna_2.SaveState(scn);
+	if (pMission->IsJMission()) simbay.MappingCameraSaveState(scn);
+	if (pMission->GetPanel230Version() == 1) simbay.GammaBaySaveState(scn);
+	if (pMission->GetPanel230Version() == 1) simbay.MassSpectrometerSaveState(scn);
 }
 
 void Saturn::QuicksaveScenario()
@@ -2188,6 +2232,21 @@ int Saturn::GetAttachState()
 	state.ChutesAttached = ChutesAttached;
 	state.LESLegsCut = LESLegsCut;
 	state.SIMBayPanelJett = SIMBayPanelJett;
+	state.SubSatLaunched = SubSatLaunched;
+	state.SubSatRetracted = SubSatRetracted;
+	state.GammaBayDeployed = GammaBayDeployed;
+	state.MassSpectrometerDeployed = MassSpectrometerDeployed;
+	state.GammaBayJett = GammaBayJett;
+	state.MassSpectrometerJett = MassSpectrometerJett;
+	state.DipoleAntennasJett = DipoleAntennasJett;
+	state.DipoleAntenna1Deployed = DipoleAntenna1Deployed;
+	state.DipoleAntenna2Deployed = DipoleAntenna2Deployed;
+	state.MappingCameraCoverDeployed = MappingCameraCoverDeployed;
+	state.XRayCoverDeployed = XRayCoverDeployed;
+	state.IRCoverDeployed = IRCoverDeployed;
+	state.UVCoverDeployed = UVCoverDeployed;
+	state.PanoramicCameraON = PanoramicCameraON;
+	state.MappingCameraExtended = MappingCameraExtended;
 
 	return state.word;
 }
@@ -2207,6 +2266,21 @@ void Saturn::SetAttachState(int s)
 	ChutesAttached = (state.ChutesAttached != 0);
 	LESLegsCut = (state.LESLegsCut != 0);
 	SIMBayPanelJett = (state.SIMBayPanelJett != 0);
+	SubSatLaunched = (state.SubSatLaunched != 0);
+	SubSatRetracted = (state.SubSatRetracted != 0);
+	GammaBayDeployed = (state.GammaBayDeployed != 0);
+	MassSpectrometerDeployed = (state.MassSpectrometerDeployed != 0);
+	GammaBayJett = (state.GammaBayJett != 0);
+	MassSpectrometerJett = (state.MassSpectrometerJett != 0);
+	DipoleAntennasJett = (state.DipoleAntennasJett != 0);
+	DipoleAntenna1Deployed = (state.DipoleAntenna1Deployed != 0);
+	DipoleAntenna2Deployed = (state.DipoleAntenna2Deployed != 0);
+	MappingCameraCoverDeployed = (state.MappingCameraCoverDeployed != 0);
+	XRayCoverDeployed = (state.XRayCoverDeployed != 0);
+	IRCoverDeployed = (state.IRCoverDeployed != 0);
+	UVCoverDeployed = (state.UVCoverDeployed != 0);
+	PanoramicCameraON = (state.PanoramicCameraON != 0);
+	MappingCameraExtended = (state.MappingCameraExtended != 0);
 }
 
 int Saturn::GetA13State()
@@ -2797,6 +2871,21 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		else if (!strnicmp(line, "VHFRANGING", 10)) {
 			vhfranging.LoadState(line);
 		}
+		else if (!strnicmp(line, "HFANTENNA1", 10)) {
+			hf_antenna_1.LoadState(line);
+		}
+		else if (!strnicmp(line, "HFANTENNA2", 10)) {
+			hf_antenna_2.LoadState(line);
+		}
+		else if (!strnicmp(line, "MAPPINGCAMERA", 13)) {
+			simbay.MappingCameraLoadState(line);
+		}
+		else if (!strnicmp(line, "GAMMABAY", 8)) {
+			simbay.GammaBayLoadState(line);
+		}
+		else if (!strnicmp(line, "MASSSPEC", 8)) {
+			simbay.MassSpectrometerLoadState(line);
+		}
 	    else if (!strnicmp (line, "DATARECORDER", 12)) {
 		    dataRecorder.LoadState(line);
 	    }
@@ -2972,7 +3061,7 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 	// find.
 	//
 
-	srandom(VehicleNo + (int) vstatus + (int) time(0));
+	srandom(VehicleNo + (size_t) vstatus + (int) time(0));
 
 	//
 	// At some point we should reorder these checks by length, to minimise the chances
@@ -3677,9 +3766,9 @@ int Saturn::clbkConsumeDirectKey(char *kstate)
 	// Only override these keys if the user is holding no modifier keys, Alt only, or Ctrl + Alt.
 	if (GetAttitudeMode() == ATTITUDEMODE::ATTMODE_ROT && !(KEYMOD_CONTROL(kstate) && !KEYMOD_ALT(kstate)) && !KEYMOD_SHIFT(kstate)) {
 		// Possible deflection amounts are:
-		// No key modifiers: 10.5° (max proportional rate, but not hardover)
-		// Alt: 11.5° (full deflection, triggering direct switches)
-		// Ctrl + Alt: 1.51° (triggering breakout switches)
+		// No key modifiers: 10.5ï¿½ (max proportional rate, but not hardover)
+		// Alt: 11.5ï¿½ (full deflection, triggering direct switches)
+		// Ctrl + Alt: 1.51ï¿½ (triggering breakout switches)
 		double deflectionDegrees = KEYMOD_ALT(kstate) ? KEYMOD_CONTROL(kstate) ? 1.51 : 11.5 : 10.5;
 		double deflectionPercent = deflectionDegrees / 11.5;
 

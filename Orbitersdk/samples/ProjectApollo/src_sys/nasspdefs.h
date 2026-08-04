@@ -408,15 +408,15 @@ static inline void CSMToOrbiterCoordinates(VECTOR3 &vec)
 // Internal systems.
 //
 
-#define CSM_H2TANK_CAPACITY 12700.58636		///< in g, 28 lb
-#define CSM_O2TANK_CAPACITY 145149.5584		///< in g, 320 lb
-//#define CSM_H2TANK_CAPACITY 19050.87954   ///< Extended stay tank config (for testing Apollo 15-17)
-//#define CSM_O2TANK_CAPACITY 217724.3386	///< Extended stay tank config (for testing Apollo 15-17)
+//#define CSM_H2TANK_CAPACITY 12700.58636		///< in g, 28 lb
+//#define CSM_O2TANK_CAPACITY 145149.5584		///< in g, 320 lb
+#define CSM_H2TANK_CAPACITY 19050.87954   ///< Extended stay tank config (for testing Apollo 15-17)
+#define CSM_O2TANK_CAPACITY 217724.3386	///< Extended stay tank config (for testing Apollo 15-17)
 
 //#define LM_DES_H2O_CAPACITY 151046.2592		///< in g, 333 lb		//Quantity or 100% measurement of the h2o tanks needs to be adjusted based on pad fill
 //#define LM_ASC_H2O_CAPACITY 19277.67573		///< in g, 42.5 lb		//Quantity or 100% measurement of the h2o tanks needs to be adjusted based on pad fill
-#define LM_DES_H2O_CAPACITY 122379.2			//Pad Fill 269.8 lb (Average of non J Mission flights)
-//#define LM_DES_H2O_CAPACITY 183160.6			//J-Mission Conversion Pad Fill 403.8 lb (Average of J Mission flights)
+//#define LM_DES_H2O_CAPACITY 122379.2			//Pad Fill 269.8 lb (Average of non J Mission flights)
+#define LM_DES_H2O_CAPACITY 183160.6			//J-Mission Conversion Pad Fill 403.8 lb (Average of J Mission flights)
 #define LM_ASC_H2O_CAPACITY 19232.3				//Pad Fill	42.4 lb (Average of all flights)
 
 //

@@ -68,10 +68,19 @@
 #include "inertial.h"
 #include "CueCardManager.h"
 #include "CSMMalfunctionSimulation.h"
+#include "SIMBay.h"
 
 #define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"
 #include "vesim.h"
+
+#ifdef _OPENORBITER
+#include <gcCoreAPI.h>
+#include "DrawAPi.h"
+#else
+#include <gcConst.h>
+#include "Sketchpad2.h"	// Sketchpad2 is for superimposing tests in O16Beta. In OO we use the DrawAPi.h
+#endif // _OPENORBITER
 
 class MCC;
 class IU;
@@ -83,6 +92,11 @@ namespace mission
 	class Mission;
 };
 
+// This is moved here from saturnpanel.cpp for using it in also in saturnvc.cpp
+// CSM Optics base direction, as given in the Colossus code CSM_GEOMETRY.agc
+// All flown Colossus versions use these values
+#define OPTICS_BASE_COS  0.8431756920
+#define OPTICS_BASE_SIN  0.5376381241
 
 #define RCS_SM_QUAD_A		0
 #define RCS_SM_QUAD_B		1
@@ -293,6 +307,24 @@ typedef struct {
 	double InjectorFlange1TempF;
 	double InjectorFlange2TempF;
 } SPSStatus;
+
+// Some defines for the VC Optics
+// Order of meshgroups and textures
+#define CMVC_SCT_EYEPIECE	0
+#define CMVC_SXT_EYEPIECE	1
+#define CMVC_OPTICS_DSKY	2
+#define CMVC_OPTICS_P122	3
+#define CMVC_OPTICS_CLKPNTS	4
+#define CMVC_SXT_CUSTOM_CAM	5
+#define CMVC_SCT_RETICLE	6
+#define CMVC_SXT_RETICLE	7
+
+#define NUM_MSHGRPS	8
+#define NUM_RTCL	2
+#define FIRSTMSHGRP	0
+#define LASTMSHGRP	5
+#define FIRSTRTCL	6
+#define LASTRTCL	7
 
 // Vesim input IDs
 #define CSM_AXIS_INPUT_RHC_R        1
@@ -570,6 +602,8 @@ public:
 		SRF_CRYO_SWITCHES_J,
 		SRF_CRYO_IND_J,
 		SRF_SWITCHGUARDS90_RIGHT,
+		SRF_CSM_PANEL_230_CSM112,
+		SRF_CSM_PANEL_230_CSM114,
 
 
 		//
@@ -612,6 +646,10 @@ public:
 		SRF_VC_DIGITAL90,
 		SRF_VC_EVENT_TIMER_DIGITS90,
 		SRF_VC_ABORT,
+		SRF_VC_OPTICS_DSKY,
+		SRF_VC_OPTICS_P122,
+		SRF_VC_OPTICS_CUSTOMCAM,
+		SRF_VC_4DSKY_LEB,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
@@ -682,6 +720,21 @@ public:
 			unsigned Spare1:1;				///< Spare
 			unsigned LESLegsCut:1;			///< Are the LES legs attached?
 			unsigned SIMBayPanelJett:1;		///< Has the SIM bay panel been jettisoned?
+			unsigned SubSatLaunched : 1;		///< Has the Subsatellite been launched?
+			unsigned SubSatRetracted : 1;		///
+			unsigned DipoleAntenna1Deployed : 1;		///< Has the Dipole Antenna 1 been deployed?
+			unsigned DipoleAntenna2Deployed : 1;		///< Has the Dipole Antenna 2 been deployed?
+			unsigned MappingCameraCoverDeployed : 1;		///
+			unsigned XRayCoverDeployed : 1;		///
+			unsigned IRCoverDeployed : 1;		///
+			unsigned UVCoverDeployed : 1;		///
+			unsigned PanoramicCameraON : 1;		///
+			unsigned MappingCameraExtended : 1;		///
+			unsigned DipoleAntennasJett : 1;		///
+			unsigned GammaBayJett : 1;		///
+			unsigned GammaBayDeployed : 1;		///
+			unsigned MassSpectrometerDeployed : 1;		///
+			unsigned MassSpectrometerJett : 1;		///
 		};
 		unsigned long word;
 
@@ -898,6 +951,11 @@ public:
 
 	// Variables for checklists
 	char Checklist_Variable[16][32];
+
+	// For hiding the Optics Panel122 and DSKY
+	bool ViewOpticsPanels;
+	bool OpticsVCDualViewFlashing = false;
+	DWORD VCOpticsRetAlpha = 0x80FFFFFF; // Semitransparent CustomCamera
 
 	//
 	// General functions that handle calls from Orbiter.
@@ -1252,6 +1310,10 @@ public:
 
 	void AddCMMeshes(const VECTOR3 &mesh_dir);
 
+	void SetDipoleAntennasMesh(); //Dipole Antennas mesh visibility (Jett or No Jett)
+
+	void SubSatelliteMesh(); //Subsatellite (stored) mesh visibility (at cover deploy)
+
 	///
 	/// Check whether the Launch Escape Tower is attached.
 	/// \brief Is the LET still attached?
@@ -1314,6 +1376,8 @@ public:
 	void DoMeshAnimation(AnimState &, UINT &, double, double);
 
 	void UpdatePointingArrow();
+	void UpdateCMVCOptics();
+	void CMVCOpticsInitP122Switches();
 	void UpdateSideHatchClickspots(const VECTOR3 &ofs);
 	void UpdateForwardHatchClickspots(const VECTOR3 &ofs);
 
@@ -1396,6 +1460,8 @@ protected:
 
 	void JettisonSIMBayPanel();
 
+	void LaunchSubSatellite();
+
 	//
 	// State that needs to be saved.
 	//
@@ -1476,6 +1542,39 @@ protected:
 	bool SLAHasBeacons;
 
 	bool SIMBayPanelJett;
+
+	bool SubSatLaunched;
+
+	bool SubSatBooms;
+
+	bool SubSatRetracted;
+
+	bool DipoleAntennasJett;
+
+	bool GammaBayJett;
+
+	bool MassSpectrometerJett;
+
+	bool MappingCameraCoverDeployed;
+
+	bool XRayCoverDeployed;
+
+	bool IRCoverDeployed;
+
+	bool UVCoverDeployed;
+
+	bool PanoramicCameraON;
+
+	bool GammaBayDeployed;
+
+	bool MassSpectrometerDeployed;
+
+	bool DipoleAntenna1Deployed;
+
+	bool DipoleAntenna2Deployed;
+
+	bool MappingCameraExtended;
+	///
 
 	bool DeleteLaunchSite;
 
@@ -3136,6 +3235,32 @@ protected:
 	CircuitBrakerSwitch EPSBatBusACircuitBraker;
 	CircuitBrakerSwitch EPSBatBusBCircuitBraker;
 
+	////////////////////////////////////////
+    // Panel 230 - CSM 112 (Apollo 15/16) //
+    ////////////////////////////////////////
+	SaturnPanel230CSM112* Panel230CSM112;
+
+	IndicatorSwitch GammaBay1Indicator;
+	IndicatorSwitch GammaBay2Indicator;
+	IndicatorSwitch MassSpectrometer1Indicator;
+	IndicatorSwitch MassSpectrometer2Indicator;
+	IndicatorSwitch SubSatIndicator;
+
+	double SubSatDelay = -1.0; // < 0 = inactive
+
+	////////////////////////////////////////
+	// Panel 230 - CSM 114 (Apollo 17) //
+	////////////////////////////////////////
+	SaturnPanel230CSM114* Panel230CSM114;
+
+	IndicatorSwitch MappingCamera1Indicator;
+	IndicatorSwitch MappingCamera2Indicator;
+	IndicatorSwitch LunarSounderIndicator;
+	IndicatorSwitch HFAntenna1Indicator;
+	IndicatorSwitch HFAntenna2Indicator;
+	IndicatorSwitch HFAntennaJettIndicator;
+	IndicatorSwitch PanoramicCameraIndicator;
+
 	///////////////////////
 	// Panel 250/251/252 //
 	///////////////////////
@@ -3670,6 +3795,11 @@ protected:
 	RNDZXPDRSystem RRTsystem;
 	CTE cte;
 
+	//Sim Bay equipment
+	HF_Antenna_1 hf_antenna_1;
+	HF_Antenna_2 hf_antenna_2;
+	SIMBay simbay;
+
 	//Instrumentation
 	SCE sce;
 	PowerMerge ECSPressGroups1Feeder;
@@ -4056,6 +4186,8 @@ protected:
     #define SATVIEW_LOWER_CENTER    9
     #define SATVIEW_UPPER_CENTER    10
 	#define SATVIEW_SIDEHATCH       11
+	#define SATVIEW_OPTICS_SCT		12
+	#define SATVIEW_OPTICS_SXT		13
 
 	unsigned int	viewpos;
 
@@ -4080,6 +4212,7 @@ protected:
 	int coascdrreticleidx;
 	int cmvccuecardsarrowsidx;
 	int hcmPointingArrowidx;
+	int hCMVCOpticsidx;
 
 	DEVMESHHANDLE vcmesh;
 	bool ViewCueCardArrows;
@@ -4099,6 +4232,14 @@ protected:
 	double LastFuelWeight;
 	double CurrentFuelWeight;
 	VECTOR3 currentCoG;
+
+	int yagiidx;
+	int simbay1idx;
+	int simbay2idx;
+	int dipoleboxesidx;
+	int dipoleantenna1idx;
+	int dipoleantenna2idx;
+	int subsatellitestoredidx;
 
 	//
 	// Panels
@@ -4136,6 +4277,8 @@ protected:
 	bool FovFixed;
 	bool FovExternal;
 	double FovSave;
+	double FovSaveVCOptics;
+	bool GNPanelView = false;
 	int maxTimeAcceleration;
 	bool IsMultiThread;
 
@@ -4202,6 +4345,7 @@ protected:
 	OBJHANDLE hLC34;
 	OBJHANDLE hLC37;
 	OBJHANDLE hLCC;
+	OBJHANDLE hSubSatellite;
 
 	//
 	// ISP and thrust values, which vary depending on vehicle number.
@@ -4318,12 +4462,11 @@ protected:
 	void SetVCLighting(UINT meshidx, int material, int EmissionMode, double state, int cnt);
 #endif
 
-//	CAMERAHANDLE hFDAICam = NULL;
-//	SURFHANDLE srfFDAICamTexture;
-//	SURFHANDLE hFDAISurf;
+	CAMERAHANDLE hOpticsCustomCam = NULL;
+	SURFHANDLE srfOpticsCustomCam;
 
-//	void InitFDAICustomCamera(void);
-
+	void UpdateOpticsCustomCam(VECTOR3, VECTOR3, VECTOR3);
+	
 	//
 	// Systems functions.
 	//
@@ -4795,6 +4938,11 @@ protected:
 	friend class NumericLights;
 	friend class ExteriorLighting;
 
+	// Friend class Simbay equipment
+	friend class HF_Antenna_1;
+	friend class HF_Antenna_2;
+	friend class SIMBay;
+
 	friend void cbCSMVesim(int inputID, int eventType, int newValue, void *pdata);
 };
 
@@ -4828,5 +4976,15 @@ extern MESHHANDLE hcmCOAScdr;
 extern MESHHANDLE hcmCOAScdrreticle;
 extern MESHHANDLE hcmCueCardsArrows;
 extern MESHHANDLE hcmPointingArrow;
+extern MESHHANDLE hCMVCOptics;
+
+
+extern MESHHANDLE hYAGI;
+extern MESHHANDLE hSMSIMBAY1;
+extern MESHHANDLE hSMSIMBAY2;
+extern MESHHANDLE hDIPOLEBOXES;
+extern MESHHANDLE hDIPOLEANTENNA1;
+extern MESHHANDLE hDIPOLEANTENNA2;
+extern MESHHANDLE hSUBSATELLITESTORED;
 
 #endif // _PA_SATURN_H

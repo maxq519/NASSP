@@ -33,11 +33,12 @@
 #include "resource.h"
 #include <stdio.h>
 #include "vesim.h"
+#include <WinUser.h>
 
 // ==============================================================
 // Some global parameters
 
-#define MAX_TABNUM 3
+#define MAX_TABNUM 4
 
 // file name for storing custom parameters
 static const char *cfgfile = "ProjectApollo/Saturn5.launchpad.cfg";
@@ -70,8 +71,10 @@ static struct {
 	int Saturn_VAGCChecklistAutoEnabled;
 	int Saturn_VcInfoEnabled;
 	int Saturn_VibrationVisualization;
+	int Saturn_AutosaveEnabled;
+	int Saturn_AutosaveInterval;
+	int Saturn_AutosaveNotification;
 } gParams;
-
 
 // ==============================================================
 // A class defining the new launchpad parameter item
@@ -89,9 +92,10 @@ public:
 	char *Description() { return "Global configuration for Project Apollo - NASSP."; }
 	bool clbkOpen (HWND hLaunchpad);
 	int clbkWriteConfig ();
-	static BOOL CALLBACK DlgProcFrame (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-	static BOOL CALLBACK DlgProcVisual (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-	static BOOL CALLBACK DlgProcControl (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+	static INT_PTR CALLBACK DlgProcFrame (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+	static INT_PTR CALLBACK DlgProcVisual (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+	static INT_PTR CALLBACK DlgProcControl (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+	static INT_PTR CALLBACK DlgProcAutosave (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 protected:
 	void WriteConfig(FILEHANDLE hFile);
@@ -140,8 +144,14 @@ ProjectApolloConfigurator::ProjectApolloConfigurator (): LaunchpadItem ()
 			sscanf(line + 13, "%i", &gParams.Saturn_VcInfoEnabled);
 		} else if (!strnicmp(line, "VIBRATIONVISUALIZED", 19)) {
 			sscanf(line + 19, "%i", &gParams.Saturn_VibrationVisualization);
+		} else if (!strnicmp(line, "AUTOSAVE_ENABLED", 16)) {
+			sscanf(line + 16, "%i", &gParams.Saturn_AutosaveEnabled);
+		} else if (!strnicmp(line, "AUTOSAVE_INTERVAL", 17)) {
+			sscanf(line + 17, "%i", &gParams.Saturn_AutosaveInterval);
+		} else if (!strnicmp(line, "AUTOSAVE_NOTIFICATION", 21)) {
+			sscanf(line + 21, "%i", &gParams.Saturn_AutosaveNotification);
 		}
-	}	
+	}
 	oapiCloseFile (hFile, FILE_IN);
 }
 
@@ -224,10 +234,19 @@ void ProjectApolloConfigurator::WriteConfig(FILEHANDLE hFile)
 	sprintf(cbuf, "VIBRATIONVISUALIZED %d", gParams.Saturn_VibrationVisualization);
 	oapiWriteLine(hFile, cbuf);
 
+	sprintf(cbuf, "AUTOSAVE_ENABLED %d", gParams.Saturn_AutosaveEnabled);
+	oapiWriteLine(hFile, cbuf);
+
+	sprintf(cbuf, "AUTOSAVE_INTERVAL %d", gParams.Saturn_AutosaveInterval);
+	oapiWriteLine(hFile, cbuf);
+
+	sprintf(cbuf, "AUTOSAVE_NOTIFICATION %d", gParams.Saturn_AutosaveNotification);
+	oapiWriteLine(hFile, cbuf);
+
 	oapiCloseFile (hFile, FILE_OUT);
 }
 
-BOOL CALLBACK ProjectApolloConfigurator::DlgProcFrame (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK ProjectApolloConfigurator::DlgProcFrame (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	TCITEM tabitem;
     HWND hTab;
@@ -253,6 +272,9 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcFrame (HWND hWnd, UINT uMsg, WPA
 		tabitem.pszText = "Miscellaneous";
 		SendMessage(hTab, TCM_INSERTITEM, 2, (LPARAM) &tabitem);
 
+		tabitem.pszText = "Autosave";
+		SendMessage(hTab, TCM_INSERTITEM, 3, (LPARAM) &tabitem);
+
 		// set tab control display area
 		GetWindowRect(hTab, &rc);
 		TabCtrl_AdjustRect(hTab, false, &rc);
@@ -272,6 +294,10 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcFrame (HWND hWnd, UINT uMsg, WPA
 		gParams.hDlgTabs[2] = CreateDialog(gParams.hInst, MAKEINTRESOURCE(IDD_PAGEMISC), hWnd, (DLGPROC) DlgProcControl);
 		MoveWindow(gParams.hDlgTabs[2], pt.x, pt.y, rc.right - rc.left, rc.bottom - rc.top, false);
 		ShowWindow(gParams.hDlgTabs[2], SW_HIDE);
+
+		gParams.hDlgTabs[3] = CreateDialog(gParams.hInst, MAKEINTRESOURCE(IDD_PAGEAUTOSAVE), hWnd, (DLGPROC) DlgProcAutosave);
+		MoveWindow(gParams.hDlgTabs[3], pt.x, pt.y, rc.right - rc.left, rc.bottom - rc.top, false);
+		ShowWindow(gParams.hDlgTabs[3], SW_HIDE);
 
 		return TRUE;
 
@@ -419,6 +445,29 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcFrame (HWND hWnd, UINT uMsg, WPA
 					gParams.Saturn_VibrationVisualization = 50;
 				}
 
+				// Autosave Tab
+				if (SendDlgItemMessage(gParams.hDlgTabs[3], IDC_CHECK_AUTOSAVE_ENABLED, BM_GETCHECK, 0, 0) == BST_CHECKED) {
+					gParams.Saturn_AutosaveEnabled = 1;
+				}
+				else {
+					gParams.Saturn_AutosaveEnabled = 0;
+				}
+
+				SendDlgItemMessage(gParams.hDlgTabs[3], IDC_EDIT_AUTOSAVE_INTERVAL, WM_GETTEXT, 4, (LPARAM)(LPCTSTR)buffer);
+				if (sscanf(buffer, "%i", &i) == 1 && i >= 1 && i <= 60) {
+					gParams.Saturn_AutosaveInterval = i;
+				}
+				else {
+					gParams.Saturn_AutosaveInterval = 10;
+				}
+
+				if (SendDlgItemMessage(gParams.hDlgTabs[3], IDC_CHECK_AUTOSAVE_NOTIFICATION, BM_GETCHECK, 0, 0) == BST_CHECKED) {
+					gParams.Saturn_AutosaveNotification = 1;
+				}
+				else {
+					gParams.Saturn_AutosaveNotification = 0;
+				}
+
 				EndDialog (hWnd, 0);
 				return 0;
 
@@ -432,7 +481,7 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcFrame (HWND hWnd, UINT uMsg, WPA
 	return 0;
 }
 
-BOOL CALLBACK ProjectApolloConfigurator::DlgProcVisual (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK ProjectApolloConfigurator::DlgProcVisual (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {
 	case WM_INITDIALOG: // display the current value
@@ -453,7 +502,7 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcVisual (HWND hWnd, UINT uMsg, WP
 	return 0;
 }
 
-BOOL CALLBACK ProjectApolloConfigurator::DlgProcControl (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK ProjectApolloConfigurator::DlgProcControl (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	char buffer[100];
 
@@ -547,7 +596,7 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcControl (HWND hWnd, UINT uMsg, W
 		} else if (HIWORD(wParam) == BN_CLICKED && (HWND)lParam == GetDlgItem(hWnd, IDC_BUTTON_CREATECONFIG)) {
 			std::string configdir = "Config\\ProjectApollo\\Vesim\\";
 			LPDIRECTINPUT8 dx8ppv;
-			HRESULT hr = DirectInput8Create((HINSTANCE) GetWindowLong(hWnd, GWL_HINSTANCE), DIRECTINPUT_VERSION, IID_IDirectInput8, (void **)&dx8ppv, NULL); // Give us a DirectInput context
+			HRESULT hr = DirectInput8Create((HINSTANCE) GetWindowLongPtr(hWnd, GWLP_HINSTANCE), DIRECTINPUT_VERSION, IID_IDirectInput8, (void **)&dx8ppv, NULL); // Give us a DirectInput context
 			if (!FAILED(hr)) {
 				Vesim lmvm(NULL, NULL), csmvm(NULL, NULL);
 				lmvm.setupDevices("LM", dx8ppv);
@@ -572,9 +621,27 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcControl (HWND hWnd, UINT uMsg, W
 			// set the text color in (HDC)lParam
 			SetBkMode((HDC)wParam,TRANSPARENT);
 			SetTextColor((HDC)wParam, RGB(255,0,0));
-			return (BOOL)CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
+			return (INT_PTR)CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
 		}
 		break;
+	}
+	return 0;
+}
+
+INT_PTR CALLBACK ProjectApolloConfigurator::DlgProcAutosave (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	char buffer[100];
+
+	switch (uMsg) {
+	case WM_INITDIALOG:
+		SendDlgItemMessage(hWnd, IDC_CHECK_AUTOSAVE_ENABLED, BM_SETCHECK, gParams.Saturn_AutosaveEnabled ? BST_CHECKED : BST_UNCHECKED, 0);
+
+		sprintf(buffer, "%i", gParams.Saturn_AutosaveInterval);
+		SendDlgItemMessage(hWnd, IDC_EDIT_AUTOSAVE_INTERVAL, WM_SETTEXT, 0, (LPARAM)(LPCTSTR)buffer);
+
+		SendDlgItemMessage(hWnd, IDC_CHECK_AUTOSAVE_NOTIFICATION, BM_SETCHECK, gParams.Saturn_AutosaveNotification ? BST_CHECKED : BST_UNCHECKED, 0);
+
+		return TRUE;
 	}
 	return 0;
 }
@@ -697,6 +764,9 @@ DLLCLBK void opcDLLInit (HINSTANCE hDLL)
 	gParams.Saturn_VAGCChecklistAutoEnabled = 0;
 	gParams.Saturn_VcInfoEnabled = 0;
 	gParams.Saturn_VibrationVisualization = 50;
+	gParams.Saturn_AutosaveEnabled = 0;
+	gParams.Saturn_AutosaveInterval = 10;
+	gParams.Saturn_AutosaveNotification = 1;
 
 	gParams.item = new ProjectApolloConfigurator;
 	for (i = 0; i < MAX_TABNUM; i++)
