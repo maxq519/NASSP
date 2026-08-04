@@ -106,6 +106,8 @@ typedef struct {
 	int cdrStatus;	//0 = cabin, 1 = suit with helmet/gloves, 2 = EVA, 3 = PLSS, 4 = suit without helmet/gloves
 	int lmpStatus;	//0 = cabin, 1 = suit with helmet/gloves, 2 = EVA, 3 = PLSS, 4 = suit without helmet/gloves
 	double UCTAStatus;
+	std::string cdrName;
+	std::string lmpName;
 } LEMECSStatus;
 
 // Systems things
