@@ -3928,19 +3928,11 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 		return 0;
 	}
 
-	if (!KEYMOD_SHIFT(kstate) && KEYMOD_CONTROL(kstate) && KEYMOD_ALT(kstate))
-	{
-		if (down) {
-			switch (key) {
-			case OAPI_KEY_S:
-				QuicksaveScenario();
-				break;
-			}
-		}
-	}
-
 	if (KEYMOD_CONTROL(kstate)) {
 		switch (key) {
+			case OAPI_KEY_S:
+				if (down) { QuicksaveScenario(); }
+				break;
 			case OAPI_KEY_D:
 				// Orbiter undocking messes with our undocking system. We consume the keybind here to block it.
 				// This won't work if the user has changed this keybind. Unfortunately Orbiter does not export the keymap through the API (yet). :(

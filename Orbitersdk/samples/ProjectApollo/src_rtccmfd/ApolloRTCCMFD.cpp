@@ -547,23 +547,13 @@ void ApolloRTCCMFD::AGC_Display(char* Buff, double vel)
 
 void ApolloRTCCMFD::FormatLatitude(char * Buff, double lat)
 {
-	double iPart, fPart;
-	fPart = modf(abs(lat), &iPart);
-
-	//Rounding
-	if (fPart*60.0 >= 59.5)
-	{
-		iPart += 1.0;
-		fPart = 0.0;
-	}
-
 	if (lat >= 0)
 	{
-		sprintf_s(Buff, 64, "%02.0lf:%02.0lfN", iPart, fPart*60.0);
+		sprintf_s(Buff, 64, "%0.2lf °N", lat);
 	}
 	else
 	{
-		sprintf_s(Buff, 64, "%02.0lf:%02.0lfS", iPart, fPart*60.0);
+		sprintf_s(Buff, 64, "%0.2lf °S", lat);
 	}
 }
 
@@ -578,23 +568,13 @@ void ApolloRTCCMFD::FormatLongitude(char * Buff, double lng, int precision)
 		lng += 360.0;
 	}
 
-	double iPart, fPart;
-	fPart = modf(abs(lng), &iPart);
-
-	//Rounding
-	if (fPart*60.0 >= 59.5)
-	{
-		iPart += 1.0;
-		fPart = 0.0;
-	}
-
 	if (lng >= 0)
 	{
-		sprintf_s(Buff, 64, "%03.0lf:%0*.0lfE", iPart, precision, fPart*60.0);
+		sprintf_s(Buff, 64, "%03.*lf °E", precision, lng);
 	}
 	else
 	{
-		sprintf_s(Buff, 64, "%03.0lf:%0*.0lfW", iPart, precision, fPart*60.0);
+		sprintf_s(Buff, 64, "%03.*lf °W", precision, lng);
 	}
 }
 
@@ -2073,7 +2053,7 @@ void ApolloRTCCMFD::GenericGETInput(double *get, char *message, void (ApolloRTCC
 	GET_Display2(Buffer, (*get));
 
 	bool GenericGETInputBox(void *id, char *str, void *data);
-	oapiOpenInputBox(message, GenericGETInputBox, Buffer, 25, data2);
+	oapiOpenInputBox(message, GenericGETInputBox, 0, 25, data2);
 }
 
 bool GenericGETInputBox(void *id, char *str, void *data)
@@ -2115,7 +2095,7 @@ void ApolloRTCCMFD::GenericDoubleInput(double *val, char *message, char* format,
 	sprintf(Buffer, format, (*val) / factor);
 
 	bool GenericDoubleInputBox(void *id, char *str, void *data);
-	oapiOpenInputBox(message, GenericDoubleInputBox, Buffer, 25, data2);
+	oapiOpenInputBox(message, GenericDoubleInputBox, 0, 25, data2);
 }
 
 bool GenericDoubleInputBox(void *id, char *str, void *data)
@@ -2145,7 +2125,7 @@ void ApolloRTCCMFD::GenericDouble2Input(double *val1, double *val2, char* messag
 	sprintf(Buffer, format, (*val1) / factor1, (*val2) / factor2);
 
 	bool GenericDouble2InputBox(void *id, char *str, void *data);
-	oapiOpenInputBox(message, GenericDouble2InputBox, Buffer, 30, data2);
+	oapiOpenInputBox(message, GenericDouble2InputBox, 0, 30, data2);
 }
 
 bool GenericDouble2InputBox(void *id, char *str, void *data)
@@ -2177,7 +2157,7 @@ void ApolloRTCCMFD::GenericIntInput(int *val, char *message, char* format, void 
 	sprintf(Buffer, format, (*val));
 
 	bool GenericIntInputBox(void *id, char *str, void *data);
-	oapiOpenInputBox(message, GenericIntInputBox, Buffer, 25, data2);
+	oapiOpenInputBox(message, GenericIntInputBox, 0, 25, data2);
 }
 
 bool GenericIntInputBox(void *id, char *str, void *data)
@@ -2225,7 +2205,7 @@ void ApolloRTCCMFD::GenericInt2Input(int *val1, int *val2, char* message, char* 
 	sprintf(Buffer, format, (*val1), (*val2));
 
 	bool GenericInt2InputBox(void *id, char *str, void *data);
-	oapiOpenInputBox(message, GenericInt2InputBox, Buffer, 25, data2);
+	oapiOpenInputBox(message, GenericInt2InputBox, 0, 25, data2);
 }
 
 bool GenericInt2InputBox(void *id, char *str, void *data)
@@ -2269,7 +2249,7 @@ void ApolloRTCCMFD::GenericVectorInput(VECTOR3 *val, char* message, char* format
 	sprintf(Buffer, format, (*val).x / factor, (*val).y / factor, (*val).z / factor);
 
 	bool GenericVectorInputBox(void *id, char *str, void *data);
-	oapiOpenInputBox(message, GenericVectorInputBox, Buffer, 25, data2);
+	oapiOpenInputBox(message, GenericVectorInputBox, 0, 25, data2);
 }
 
 bool GenericVectorInputBox(void *id, char *str, void *data)
@@ -2720,7 +2700,7 @@ void ApolloRTCCMFD::menuExpendablesTableAdd()
 {
 	bool ExpendablesTableAddInput(void* id, char* str, void* data);
 
-	oapiOpenInputBox("Add entry to table. Format: Time Weight-Loss Vehicle. Notes: Time = HHH:MM:SS, Weight-Loss = Positive is a loss, negative a gain, Vehicle = C, S, A or D", ExpendablesTableAddInput, "000:00:00 0.0 C", 30, (void*)this);
+	oapiOpenInputBox("Add entry to table. Format: Time Weight-Loss Vehicle. Notes: Time = HHH:MM:SS, Weight-Loss = Positive is a loss, negative a gain, Vehicle = C, S, A or D", ExpendablesTableAddInput, 0, 30, (void*)this);
 }
 
 bool ExpendablesTableAddInput(void* id, char* str, void* data)
@@ -2732,7 +2712,7 @@ void ApolloRTCCMFD::menuExpendablesTableReplace()
 {
 	bool ExpendablesTableReplaceInput(void* id, char* str, void* data);
 
-	oapiOpenInputBox("Replace entry in table. Format: Entry-Number Time Weight-Loss Vehicle. Entry-Number = 1-20, Notes: Time = HHH:MM:SS, Weight-Loss = Positive is a loss, negative a gain, Vehicle = C, S, A or D", ExpendablesTableReplaceInput, "1 000:00:00 0.0 C", 30, (void*)this);
+	oapiOpenInputBox("Replace entry in table. Format: Entry-Number Time Weight-Loss Vehicle. Entry-Number = 1-20, Notes: Time = HHH:MM:SS, Weight-Loss = Positive is a loss, negative a gain, Vehicle = C, S, A or D", ExpendablesTableReplaceInput, 0, 30, (void*)this);
 }
 
 bool ExpendablesTableReplaceInput(void* id, char* str, void* data)
@@ -2744,7 +2724,7 @@ void ApolloRTCCMFD::menuExpendablesTableDelete()
 {
 	bool ExpendablesTableDeleteInput(void* id, char* str, void* data);
 
-	oapiOpenInputBox("Delete entry in table. Format: Entry-Number. Notes: Entry-Number = 1-20 or 0 to delete all entries.", ExpendablesTableDeleteInput, "1", 30, (void*)this);
+	oapiOpenInputBox("Delete entry in table. Format: Entry-Number. Notes: Entry-Number = 1-20 or 0 to delete all entries.", ExpendablesTableDeleteInput, 0, 30, (void*)this);
 }
 
 bool ExpendablesTableDeleteInput(void* id, char* str, void* data)
@@ -6293,7 +6273,7 @@ void ApolloRTCCMFD::menuLMLSUpload()
 void ApolloRTCCMFD::menuREFSMMATUplinkCalc()
 {
 	bool REFSMMATUplinkCalcInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Format: REFSMMAT ADDRESS. REFSMMAT = CUR, PCR, TLM, MED, LCV, OST, DMT, DOD, DOK, LLA, LLD. ADDRESS = 1 for actual, 2 for desired REFSMMAT", REFSMMATUplinkCalcInput, "CUR 2", 20, (void*)this);
+	oapiOpenInputBox("Format: REFSMMAT ADDRESS. REFSMMAT = CUR, PCR, TLM, MED, LCV, OST, DMT, DOD, DOK, LLA, LLD. ADDRESS = 1 for actual, 2 for desired REFSMMAT", REFSMMATUplinkCalcInput, 0, 20, (void*)this);
 }
 
 bool REFSMMATUplinkCalcInput(void *id, char *str, void *data)

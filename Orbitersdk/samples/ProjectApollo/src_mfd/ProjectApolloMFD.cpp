@@ -992,104 +992,106 @@ bool ProjectApolloMFD::Update (oapi::Sketchpad* skp)
 		}
 		else if (lem)
 		{
-			skp->SetTextAlign(oapi::Sketchpad::LEFT);
-			skp->Text((int)(width * 0.1), (int)(height * 0.4), "Crew status:", 12);
-			skp->Text((int)(width * 0.1), (int)(height * 0.45), "Crew number:", 12);
-			skp->Text((int)(width * 0.1), (int)(height * 0.5), "CDR:", 4);
-			skp->Text((int)(width * 0.1), (int)(height * 0.55), "LMP:", 4);
-
 			LEMECSStatus ecs;
 			lem->GetECSStatus(ecs);
 
 			skp->SetTextAlign(oapi::Sketchpad::LEFT);
-			skp->Text((int)(width * 0.1), (int)(height * 0.8), "UCD Percentage:", 16);
+			skp->Text((int)(width * 0.1), (int)(height * 0.4), "Crew status:", 12);
+			skp->Text((int)(width * 0.1), (int)(height * 0.45), "Crew number:", 12);
+			skp->SetTextAlign(oapi::Sketchpad::CENTER);
+			skp->Text((int)(width * 0.5), (int)(height * 0.55), (ecs.cdrName + ":").c_str(), ecs.cdrName.length() + 1);
+			skp->Text((int)(width * 0.5), (int)(height * 0.7), (ecs.lmpName + ":").c_str(), ecs.lmpName.length() + 1);
 
+			skp->SetTextAlign(oapi::Sketchpad::LEFT);
+			skp->Text((int)(width * 0.1), (int)(height * 0.85), "UCD Percentage:", 16);
+
+			skp->SetTextAlign(oapi::Sketchpad::CENTER);
 			if (ecs.UCTAStatus >= 95.0)
 			{
 				skp->SetTextColor(RGB(255, 0, 0));
-				skp->Text((int)(width * 0.6), (int)(height * 0.8), "FULL", 4);
+				skp->Text((int)(width * 0.75), (int)(height * 0.85), "FULL", 4);
 				skp->SetTextColor(RGB(0, 255, 0));
 			}
 			else if (ecs.UCTAStatus >= 85.0)
 			{
 				skp->SetTextColor(RGB(255, 255, 0));
 				sprintf(buffer, "%.2f%%", ecs.UCTAStatus);
-				skp->Text((int)(width * 0.6), (int)(height * 0.8), buffer, strlen(buffer));
+				skp->Text((int)(width * 0.75), (int)(height * 0.85), buffer, strlen(buffer));
 				skp->SetTextColor(RGB(0, 255, 0));
 			}
 			else
 			{
 				sprintf(buffer, "%.2f%%", ecs.UCTAStatus);
-				skp->Text((int)(width * 0.6), (int)(height * 0.8), buffer, strlen(buffer));
+				skp->Text((int)(width * 0.75), (int)(height * 0.85), buffer, strlen(buffer));
 			}
 
 			skp->SetTextAlign(oapi::Sketchpad::CENTER);
 			if (ecs.crewStatus == ECS_CREWSTATUS_OK) {
-				skp->Text((int)(width * 0.7), (int)(height * 0.4), "OK", 2);
+				skp->Text((int)(width * 0.75), (int)(height * 0.4), "OK", 2);
 			}
 			else if (ecs.crewStatus == ECS_CREWSTATUS_CRITICAL) {
 				skp->SetTextColor(RGB(255, 255, 0));
-				skp->Text((int)(width * 0.7), (int)(height * 0.4), "CRITICAL", 8);
+				skp->Text((int)(width * 0.75), (int)(height * 0.4), "CRITICAL", 8);
 				skp->SetTextColor(RGB(0, 255, 0));
 			}
 			else if (ecs.crewStatus == ECS_CREWSTATUS_CRITICAL_CO2) {
 				skp->SetTextColor(RGB(255, 255, 0));
-				skp->Text((int)(width * 0.7), (int)(height * 0.4), "CRITICAL CO2", 12);
+				skp->Text((int)(width * 0.75), (int)(height * 0.4), "CRITICAL CO2", 12);
 				skp->SetTextColor(RGB(0, 255, 0));
 			}
 			else {
 				skp->SetTextColor(RGB(255, 0, 0));
-				skp->Text((int)(width * 0.7), (int)(height * 0.4), "DEAD", 4);
+				skp->Text((int)(width * 0.75), (int)(height * 0.4), "DEAD", 4);
 				skp->SetTextColor(RGB(0, 255, 0));
 			}
 
 			sprintf(buffer, "%d", ecs.crewNumber);
-			skp->Text((int)(width * 0.7), (int)(height * 0.45), buffer, strlen(buffer));
+			skp->Text((int)(width * 0.75), (int)(height * 0.45), buffer, strlen(buffer));
 
 			if (ecs.cdrStatus == 0)
 			{
-				skp->Text((int)(width * 0.6), (int)(height * 0.5), "In Cabin", 8);
+				skp->Text((int)(width * 0.5), (int)(height * 0.6), "In Cabin", 8);
 			}
 			else if (ecs.cdrStatus == 1)
 			{
-				skp->Text((int)(width * 0.6), (int)(height * 0.5), "Suited (Helmet/Gloves On)", 25);
+				skp->Text((int)(width * 0.5), (int)(height * 0.6), "Suited (Helmet/Gloves On)", 25);
 			}
 			else if (ecs.cdrStatus == 2)
 			{
-				skp->Text((int)(width * 0.6), (int)(height * 0.5), "EVA", 3);
+				skp->Text((int)(width * 0.5), (int)(height * 0.6), "EVA", 3);
 			}
 			else if (ecs.cdrStatus == 3)
 			{
-				skp->Text((int)(width * 0.6), (int)(height * 0.5), "PLSS", 4);
+				skp->Text((int)(width * 0.5), (int)(height * 0.6), "PLSS", 4);
 			}
 			else
 			{
 				skp->SetTextColor(RGB(255, 255, 0));
-				skp->Text((int)(width * 0.6), (int)(height * 0.5), "Suited (Helmet/Gloves Off)", 26);
+				skp->Text((int)(width * 0.5), (int)(height * 0.6), "Suited (Helmet/Gloves Off)", 26);
 				skp->SetTextColor(RGB(0, 255, 0));
 			}
 
 
 			if (ecs.lmpStatus == 0)
 			{
-				skp->Text((int)(width * 0.6), (int)(height * 0.55), "In Cabin", 8);
+				skp->Text((int)(width * 0.5), (int)(height * 0.75), "In Cabin", 8);
 			}
 			else if (ecs.lmpStatus == 1)
 			{
-				skp->Text((int)(width * 0.6), (int)(height * 0.55), "Suited (Helmet/Gloves On)", 25);
+				skp->Text((int)(width * 0.5), (int)(height * 0.75), "Suited (Helmet/Gloves On)", 25);
 			}
 			else if (ecs.lmpStatus == 2)
 			{
-				skp->Text((int)(width * 0.6), (int)(height * 0.55), "EVA", 3);
+				skp->Text((int)(width * 0.5), (int)(height * 0.75), "EVA", 3);
 			}
 			else if (ecs.lmpStatus == 3)
 			{
-				skp->Text((int)(width * 0.6), (int)(height * 0.55), "PLSS", 4);
+				skp->Text((int)(width * 0.5), (int)(height * 0.75), "PLSS", 4);
 			}
 			else
 			{
 				skp->SetTextColor(RGB(255, 255, 0));
-				skp->Text((int)(width * 0.6), (int)(height * 0.55), "Suited (Helmet/Gloves Off)", 26);
+				skp->Text((int)(width * 0.5), (int)(height * 0.75), "Suited (Helmet/Gloves Off)", 26);
 				skp->SetTextColor(RGB(0, 255, 0));
 			}
 		}
